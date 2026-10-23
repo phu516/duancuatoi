@@ -1,0 +1,1695 @@
+{
+  "info": {
+    "name": "Pet Shop - Parts 4-10",
+    "description": "Run all requests in order on a development database. Creates sample catalog, customer, orders and permanent inventory history. Uses admin_email/admin_password from the Local environment. Takes care of cookies and CSRF automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080/api/v1"
+    },
+    {
+      "key": "customer_password",
+      "value": "CommercePostman123!"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.info.requestName === \"01 Admin login\") {",
+          " const run = Date.now() + \"-\" + Math.floor(Math.random()*1000000);",
+          " pm.collectionVariables.set(\"commerce_email\", \"commerce.\"+run+\"@example.test\");",
+          " pm.collectionVariables.set(\"commerce_order_key\", \"order-\"+run);",
+          " pm.collectionVariables.set(\"commerce_cancel_key\", \"cancel-\"+run);",
+          "}",
+          "if ([\"POST\", \"PUT\", \"PATCH\", \"DELETE\"].includes(pm.request.method)) {",
+          "  const base = pm.variables.get(\"base_url\");",
+          "  pm.sendRequest({url: base + \"/auth/csrf-token\", method: \"GET\"}, function (err, response) {",
+          "    if (err || response.code !== 200) throw new Error(\"Không lấy được CSRF: kiểm tra server và base_url\");",
+          "    const data = response.json();",
+          "    pm.collectionVariables.set(\"csrf_token\", data.csrf_token);",
+          "    pm.request.headers.upsert({key: data.header_name, value: data.csrf_token});",
+          "  });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Admin login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Create category",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/categories",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Commerce integration\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set(\"commerce_category\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Create food",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"category_id\":{{commerce_category}},\"product_type\":\"food\",\"name\":\"Food sample\",\"price\":120000,\"stock_quantity\":20}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set(\"commerce_product\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Create pet product draft",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"category_id\":{{commerce_category}},\"product_type\":\"pet\",\"name\":\"Poodle sample\",\"price\":3000000,\"stock_quantity\":1}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set(\"commerce_pet_product\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Create supplier",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/suppliers",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sample supplier\",\n  \"contact_info\": \"Internal contact\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set(\"commerce_supplier\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 List suppliers",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/suppliers?keyword=Sample"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Supplier detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/suppliers/{{commerce_supplier}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Update supplier",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/suppliers/{{commerce_supplier}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"address\": \"Sample address\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 Create pet profile",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/pets",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"product_id\":{{commerce_pet_product}},\"supplier_id\":{{commerce_supplier}},\"breed\":\"Poodle\",\"weight\":2.5}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set(\"commerce_pet\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 Update pet profile",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/pets/{{commerce_pet}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"color\": \"Brown\",\n  \"is_neutered\": false\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 Create health record",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/pets/{{commerce_pet}}/health-records",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"record_date\": \"2026-01-01\",\n  \"record_type\": \"checkup\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set(\"commerce_health\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Update health record",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/pets/{{commerce_pet}}/health-records/{{commerce_health}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"description\": \"Routine checkup\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 Search health records",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/health-records?pet_id={{commerce_pet}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 Open pet for sale",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/products/{{commerce_pet_product}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"is_active\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 Inventory list",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/inventory?low_stock=20"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 Inventory detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/inventory/{{commerce_product}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 Adjust inventory",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/inventory/{{commerce_product}}/adjustments",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"change\": 5,\n  \"reason\": \"Sample restock\",\n  \"reference\": \"POSTMAN\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set(\"commerce_movement\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 Inventory movements",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/inventory/{{commerce_product}}/movements"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "19 Movement detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/inventory/{{commerce_product}}/movements/{{commerce_movement}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "20 Admin logout",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{base_url}}/auth/logout"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21 Public pet list",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/pets?breed=Poodle&status=available"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "22 Public pet detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/pets/{{commerce_pet}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"No supplier or reservation leak\", () => { pm.expect(pm.response.json()).not.to.have.property(\"supplier_id\"); pm.expect(pm.response.json()).not.to.have.property(\"reserved_order_id\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "23 Public health list",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/pets/{{commerce_pet}}/health-records"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "24 Public health detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/pets/{{commerce_pet}}/health-records/{{commerce_health}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "25 Register customer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"full_name\": \"Commerce customer\",\n  \"email\": \"{{commerce_email}}\",\n  \"password\": \"{{customer_password}}\",\n  \"password_confirmation\": \"{{customer_password}}\",\n  \"phone\": \"0901234567\",\n  \"address\": \"Sample address\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "26 Customer login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{commerce_email}}\",\n  \"password\": \"{{customer_password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "27 Empty cart",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/cart"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "28 Add to cart",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/cart/items",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"product_id\":{{commerce_product}},\"quantity\":2}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "29 Add quantity",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/cart/items",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"product_id\":{{commerce_product}},\"quantity\":1}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "30 Replace quantity",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/cart/items/{{commerce_product}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"quantity\": 2\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "31 Checkout preview from cart",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/checkout/preview",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"shipping\": {\n    \"recipient_name\": \"Commerce customer\",\n    \"recipient_phone\": \"0901234567\",\n    \"delivery_method\": \"pickup\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "32 Create order from cart",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{commerce_order_key}}"
+          }
+        ],
+        "url": "{{base_url}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"shipping\": {\n    \"recipient_name\": \"Commerce customer\",\n    \"recipient_phone\": \"0901234567\",\n    \"delivery_method\": \"pickup\"\n  },\n  \"payment_method\": \"cash\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set(\"commerce_order\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "33 Replay order after cart cleared",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{commerce_order_key}}"
+          }
+        ],
+        "url": "{{base_url}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"shipping\": {\n    \"recipient_name\": \"Commerce customer\",\n    \"recipient_phone\": \"0901234567\",\n    \"delivery_method\": \"pickup\"\n  },\n  \"payment_method\": \"cash\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Idempotency replay\", () => pm.expect(pm.response.headers.get(\"Idempotency-Replayed\")).to.eql(\"true\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "34 Order list",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/orders?status=pending"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "35 Order detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/orders/{{commerce_order}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "36 Order items",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/orders/{{commerce_order}}/items"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "37 Order events",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/orders/{{commerce_order}}/events"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "38 Shipping detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/orders/{{commerce_order}}/shipping"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "39 Update shipping",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/orders/{{commerce_order}}/shipping",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"note\": \"Call before pickup\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "40 Cancellation absent",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/orders/{{commerce_order}}/cancellation"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "41 Customer logout",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{base_url}}/auth/logout"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "42 Admin login to process order",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "43 Confirm order",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/orders/{{commerce_order}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"confirmed\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "44 Record payment",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/orders/{{commerce_order}}/payment-status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"payment_status\": \"paid\",\n  \"note\": \"Payment verified\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "45 Prepare delivery",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/orders/{{commerce_order}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"shipping\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "46 Complete order",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/orders/{{commerce_order}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"completed\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "47 Delete health record",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{base_url}}/pets/{{commerce_pet}}/health-records/{{commerce_health}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "48 Delete supplier keeping pet",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{base_url}}/suppliers/{{commerce_supplier}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "49 Delete unused pet profile",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{base_url}}/pets/{{commerce_pet}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "50 Admin logout after processing",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": "{{base_url}}/auth/logout"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "51 Customer login for review",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{commerce_email}}\",\n  \"password\": \"{{customer_password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "52 Create verified purchase review",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/products/{{commerce_product}}/reviews",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Good product\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set(\"commerce_review\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "53 Review list",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/products/{{commerce_product}}/reviews?sort=newest"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "54 Review detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/products/{{commerce_product}}/reviews/{{commerce_review}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "55 Update own review",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/products/{{commerce_product}}/reviews/{{commerce_review}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rating\": 4,\n  \"comment\": null\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "56 Delete own review",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{base_url}}/products/{{commerce_product}}/reviews/{{commerce_review}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "57 Create another order to cancel",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{commerce_cancel_key}}"
+          }
+        ],
+        "url": "{{base_url}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"product_id\":{{commerce_product}},\"quantity\":1}],\"shipping\":{\"recipient_name\": \"Commerce customer\", \"recipient_phone\": \"0901234567\", \"delivery_method\": \"pickup\"},\"payment_method\":\"cash\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set(\"commerce_cancel_order\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "58 Cancel pending order",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/orders/{{commerce_cancel_order}}/cancellation",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"Changed mind\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "59 Repeat cancellation",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/orders/{{commerce_cancel_order}}/cancellation",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"Ignored replacement\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Original reason retained\", () => pm.expect(pm.response.json().reason).to.eql(\"Changed mind\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "60 Read cancellation",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/orders/{{commerce_cancel_order}}/cancellation"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "61 Delete missing cart item",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{base_url}}/cart/items/{{commerce_product}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "62 Clear cart",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{base_url}}/cart/items"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

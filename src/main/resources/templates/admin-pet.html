@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Hồ sơ thú cưng')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+<main id="main" class="container page admin-page admin-detail-page">
+  <nav th:replace="~{fragments :: adminNav}"></nav><div th:replace="~{fragments :: alerts}"></div>
+  <a class="admin-back" th:href="@{/admin/pets}">← Danh sách thú cưng</a>
+  <div class="admin-detail-heading"><div><p class="admin-kicker">HỒ SƠ THÚ CƯNG</p><h1 th:text="${pet.product.name}"></h1><p class="admin-lead" th:text="'Pet #' + ${pet.id} + ' · Sản phẩm #' + ${pet.product_id}"></p></div><span class="admin-pill" th:classappend="${' state-' + pet.status}" th:text="${display.label(pet.status)}"></span></div>
+  <div class="admin-overview-grid admin-overview-three"><div class="admin-overview-item"><small>Giống</small><strong th:text="${pet.breed ?: 'Chưa cập nhật'}"></strong></div><div class="admin-overview-item"><small>Tuổi</small><strong th:text="${pet.age ?: 'Chưa cập nhật'}"></strong></div><div class="admin-overview-item"><small>Bản ghi sức khỏe</small><strong th:text="${health.pagination.totalElements}"></strong></div></div>
+
+  <div class="admin-detail-layout"><div class="admin-detail-main">
+    <section class="admin-detail-card"><div class="admin-card-heading"><div><p class="admin-card-eyebrow">THÔNG TIN THÚ CƯNG</p><h2>Hồ sơ cơ bản</h2></div></div>
+      <form th:if="${isAdmin}" th:action="@{/admin/pets/{id}/update(id=${pet.id})}" method="post" class="admin-form-grid admin-form-two">
+        <label>Giống<input name="breed" th:value="${pet.breed}"></label><label>Tuổi<input name="age" th:value="${pet.age}"></label>
+        <label>Giới tính<select name="gender"><option value="">Chưa rõ</option><option value="male" th:selected="${pet.gender == 'male'}">Đực</option><option value="female" th:selected="${pet.gender == 'female'}">Cái</option></select></label>
+        <label>Màu lông<input name="color" th:value="${pet.color}"></label>
+        <label>Cân nặng (kg)<input name="weight" th:value="${pet.weight}" type="number" min="0.01" step="0.01"></label>
+        <label>Mã nhà cung cấp<input name="supplierId" type="number" min="1" th:value="${pet.supplier_id}"></label>
+        <label class="admin-field-wide">Tình trạng tiêm phòng<input name="vaccinationStatus" th:value="${pet.vaccination_status}"></label>
+        <label class="admin-checkbox admin-field-wide"><input name="isNeutered" type="checkbox" th:checked="${pet.is_neutered}"> Đã triệt sản</label>
+        <div class="admin-form-footer admin-field-wide"><button class="button" type="submit">Lưu hồ sơ</button></div>
+      </form>
+      <dl th:unless="${isAdmin}" class="admin-info-grid"><div><dt>Giống</dt><dd th:text="${pet.breed ?: 'Chưa cập nhật'}"></dd></div><div><dt>Tuổi</dt><dd th:text="${pet.age ?: 'Chưa cập nhật'}"></dd></div><div><dt>Giới tính</dt><dd th:text="${display.label(pet.gender)}"></dd></div><div><dt>Màu</dt><dd th:text="${pet.color ?: 'Chưa cập nhật'}"></dd></div><div><dt>Cân nặng</dt><dd th:text="${pet.weight == null ? 'Chưa cập nhật' : pet.weight + ' kg'}"></dd></div><div><dt>Tiêm phòng</dt><dd th:text="${pet.vaccination_status ?: 'Chưa cập nhật'}"></dd></div></dl>
+    </section>
+
+    <section class="admin-detail-card"><div class="admin-card-heading"><div><p class="admin-card-eyebrow">CHĂM SÓC</p><h2>Lịch sử sức khỏe</h2></div><span th:text="${health.pagination.totalElements} + ' bản ghi'"></span></div>
+      <p class="admin-help-text" th:if="${#lists.isEmpty(health.data)}">Chưa có hồ sơ sức khỏe.</p>
+      <article class="admin-health-record" th:each="h : ${health.data}"><div class="admin-health-record-heading"><div><strong th:text="${display.label(h.record_type)}"></strong><small th:text="${display.date(h.record_date)}"></small></div><span th:text="${'Bản ghi #' + h.id}"></span></div>
+        <p th:text="${h.description ?: 'Không có ghi chú thêm.'}"></p><small th:if="${h.vet_name != null}" th:text="${'Bác sĩ: ' + h.vet_name}"></small>
+        <details class="admin-edit-disclosure" th:if="${isAdmin}"><summary>Chỉnh sửa bản ghi</summary><form th:action="@{/admin/pets/{id}/health/{record}/update(id=${pet.id},record=${h.id})}" method="post" class="admin-form-grid admin-form-two"><label>Ngày khám<input name="recordDate" type="date" th:value="${h.record_date}" required></label><label>Loại bản ghi<input name="recordType" th:value="${h.record_type}" required></label><label class="admin-field-wide">Nội dung<textarea name="description" th:text="${h.description}"></textarea></label><label>Bác sĩ<input name="vetName" th:value="${h.vet_name}"></label><div class="admin-form-footer admin-field-wide"><button class="button" type="submit">Lưu thay đổi</button></div></form><form th:action="@{/admin/pets/{id}/health/{record}/delete(id=${pet.id},record=${h.id})}" method="post"><button class="admin-danger-button" type="submit">Xóa bản ghi này</button></form></details>
+      </article>
+      <nav class="admin-pagination" aria-label="Phân trang sức khỏe"><a th:if="${health.pagination.page > 0}" th:href="@{/admin/pets/{id}(id=${pet.id},page=${health.pagination.page - 1})}">← Trước</a><span th:text="${'Trang ' + (health.pagination.page + 1)}"></span><a th:if="${health.pagination.page + 1 < health.pagination.totalPages}" th:href="@{/admin/pets/{id}(id=${pet.id},page=${health.pagination.page + 1})}">Sau →</a></nav>
+    </section>
+  </div>
+  <aside class="admin-detail-side">
+    <section class="admin-detail-card admin-action-card" th:if="${isAdmin}"><p class="admin-card-eyebrow">THÊM THÔNG TIN</p><h2>Bản ghi sức khỏe mới</h2><form th:action="@{/admin/pets/{id}/health/create(id=${pet.id})}" method="post"><label>Ngày khám<input name="recordDate" type="date" required></label><label>Loại bản ghi<input name="recordType" required placeholder="Ví dụ: vaccination"></label><label>Nội dung<textarea name="description" placeholder="Kết quả khám hoặc điều trị"></textarea></label><label>Bác sĩ<input name="vetName"></label><button class="button admin-full-button" type="submit">Thêm bản ghi</button></form></section>
+    <section class="admin-detail-card"><p class="admin-card-eyebrow">SẢN PHẨM LIÊN KẾT</p><h2>Trạng thái bán</h2><p th:text="${pet.product.is_active ? 'Sản phẩm đang hiển thị trong cửa hàng.' : 'Sản phẩm đang ngừng bán hoặc còn là bản nháp.'}"></p><a class="admin-link-button" th:if="${isAdmin}" th:href="@{/admin/products/{id}(id=${pet.product_id})}">Xem sản phẩm ↗</a></section>
+    <section class="admin-detail-card admin-danger-card" th:if="${isAdmin}"><p class="admin-card-eyebrow">QUẢN LÝ DỮ LIỆU</p><h2>Xóa hồ sơ pet</h2><p>Chỉ xóa được pet còn sẵn sàng và chưa có đơn hàng liên quan.</p><details class="admin-edit-disclosure"><summary>Hiển thị thao tác xóa</summary><form th:action="@{/admin/pets/{id}/delete(id=${pet.id})}" method="post"><button class="admin-danger-button" type="submit">Xác nhận xóa hồ sơ</button></form></details></section>
+  </aside></div>
+</main>
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

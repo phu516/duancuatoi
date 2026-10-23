@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Quản trị')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+<main id="main" class="container page admin-page">
+  <nav th:replace="~{fragments :: adminNav}"></nav>
+  <div th:replace="~{fragments :: alerts}"></div>
+
+  <div class="admin-page-heading">
+    <div>
+      <p class="admin-kicker">KHÔNG GIAN QUẢN TRỊ</p>
+      <h1 th:text="${sectionTitle}">Danh sách</h1>
+      <p class="admin-lead" th:text="${sectionDescription}"></p>
+    </div>
+    <span class="admin-count"><strong th:text="${pagination.totalElements}">0</strong> mục</span>
+  </div>
+
+  <form method="get" th:action="@{/admin/{section}(section=${section})}" class="admin-filter-card">
+    <div class="admin-filter-heading"><h2>Tìm và lọc</h2><a th:href="@{/admin/{section}(section=${section})}">Xóa bộ lọc</a></div>
+    <div class="admin-filter-grid">
+      <label th:if="${section == 'users' or section == 'categories' or section == 'products' or section == 'suppliers'}">Từ khóa
+        <input name="keyword" th:value="${query['keyword']}" placeholder="Nhập tên hoặc email"></label>
+      <label th:if="${section == 'orders'}">Trạng thái đơn
+        <select name="status"><option value="">Tất cả</option><option value="pending" th:selected="${query['status'] == 'pending'}">Chờ xác nhận</option><option value="confirmed" th:selected="${query['status'] == 'confirmed'}">Đã xác nhận</option><option value="shipping" th:selected="${query['status'] == 'shipping'}">Đang giao</option><option value="completed" th:selected="${query['status'] == 'completed'}">Hoàn tất</option><option value="cancelled" th:selected="${query['status'] == 'cancelled'}">Đã hủy</option></select></label>
+      <label th:if="${section == 'pets'}">Tình trạng pet
+        <select name="status"><option value="">Tất cả</option><option value="available" th:selected="${query['status'] == 'available'}">Có thể nhận nuôi</option><option value="reserved" th:selected="${query['status'] == 'reserved'}">Đang giữ</option><option value="sold" th:selected="${query['status'] == 'sold'}">Đã bán</option></select></label>
+      <label th:if="${section == 'orders'}">Thanh toán
+        <select name="payment_status"><option value="">Tất cả</option><option value="unpaid" th:selected="${query['payment_status'] == 'unpaid'}">Chưa trả</option><option value="paid" th:selected="${query['payment_status'] == 'paid'}">Đã trả</option><option value="refunded" th:selected="${query['payment_status'] == 'refunded'}">Đã hoàn</option></select></label>
+      <label th:if="${section == 'orders'}">Từ ngày<input type="date" name="date_from" th:value="${query['date_from']}"></label>
+      <label th:if="${section == 'orders'}">Đến ngày<input type="date" name="date_to" th:value="${query['date_to']}"></label>
+      <label th:if="${section == 'orders'}">Mã khách hàng<input type="number" min="1" name="user_id" th:value="${query['user_id']}" placeholder="Ví dụ: 12"></label>
+      <label th:if="${section == 'inventory'}">Tồn kho tối đa<input type="number" min="0" name="low_stock" th:value="${query['low_stock']}" placeholder="Ví dụ: 5"></label>
+      <label th:if="${section == 'users'}">Vai trò
+        <select name="role"><option value="">Tất cả vai trò</option><option value="customer" th:selected="${query['role'] == 'customer'}">Khách hàng</option><option value="staff" th:selected="${query['role'] == 'staff'}">Nhân viên</option><option value="admin" th:selected="${query['role'] == 'admin'}">Quản trị viên</option></select></label>
+      <label th:if="${section == 'users' or section == 'products'}">Trạng thái
+        <select name="is_active"><option value="">Tất cả</option><option value="true" th:selected="${query['is_active'] == 'true'}">Hoạt động</option><option value="false" th:selected="${query['is_active'] == 'false'}">Đã khóa / ngừng bán</option></select></label>
+      <label th:if="${section == 'products'}">Loại sản phẩm
+        <select name="product_type"><option value="">Tất cả</option><option value="pet" th:selected="${query['product_type'] == 'pet'}">Thú cưng</option><option value="food" th:selected="${query['product_type'] == 'food'}">Thức ăn</option><option value="accessory" th:selected="${query['product_type'] == 'accessory'}">Phụ kiện</option></select></label>
+      <label th:if="${section == 'products'}">Mã danh mục<input type="number" min="1" name="category_id" th:value="${query['category_id']}"></label>
+      <label th:if="${section == 'products'}">Sắp xếp
+        <select name="sort"><option value="newest" th:selected="${query['sort'] == null or query['sort'] == 'newest'}">Mới nhất</option><option value="price_asc" th:selected="${query['sort'] == 'price_asc'}">Giá tăng dần</option><option value="price_desc" th:selected="${query['sort'] == 'price_desc'}">Giá giảm dần</option></select></label>
+      <label th:if="${section == 'pets'}">Giống<input name="breed" th:value="${query['breed']}" placeholder="Ví dụ: Poodle"></label>
+      <label th:if="${section == 'pets'}">Mã nhà cung cấp<input type="number" min="1" name="supplier_id" th:value="${query['supplier_id']}"></label>
+      <label th:if="${section == 'health'}">Mã pet<input type="number" min="1" name="pet_id" th:value="${query['pet_id']}"></label>
+      <div class="admin-filter-action"><button class="button admin-filter-submit" type="submit">Hiển thị kết quả</button></div>
+    </div>
+  </form>
+
+  <div class="admin-section-toolbar" th:if="${section == 'products'}">
+    <p>Tạo sản phẩm mới, sau đó mở trang chi tiết để cập nhật trạng thái bán.</p>
+    <a class="button" th:href="@{/admin/products/new}">+ Tạo sản phẩm</a>
+  </div>
+  <div class="admin-user-guidance" th:if="${section == 'users'}">
+    <span class="admin-user-guidance-icon" aria-hidden="true">i</span>
+    <p>Hệ thống dùng một tài khoản quản trị. Bạn có thể phân quyền <strong>nhân viên</strong> hoặc <strong>khách hàng</strong> và khóa tài khoản khi cần.</p>
+  </div>
+  <details class="admin-create-card" th:if="${section == 'categories'}"><summary>+ Tạo danh mục mới</summary>
+    <form th:action="@{/admin/categories/create}" method="post" class="admin-inline"><label>Tên danh mục<input name="name" maxlength="100" required placeholder="Ví dụ: Thức ăn cho chó"></label><button class="button" type="submit">Tạo danh mục</button></form>
+  </details>
+  <details class="admin-create-card" th:if="${section == 'suppliers'}"><summary>+ Thêm nhà cung cấp</summary>
+    <form th:action="@{/admin/suppliers/create}" method="post" class="admin-form-grid"><label>Tên<input name="name" required></label><label>Liên hệ<input name="contactInfo"></label><label>Địa chỉ<input name="address"></label><button class="button" type="submit">Tạo nhà cung cấp</button></form>
+  </details>
+  <details class="admin-create-card" th:if="${section == 'pets'}"><summary>+ Tạo hồ sơ pet</summary>
+    <p>Tạo sản phẩm loại thú cưng với tồn 1 trước. Sau khi hoàn tất hồ sơ, mở bán sản phẩm ở trang chi tiết.</p>
+    <form th:action="@{/admin/pets/create}" method="post" class="admin-form-grid"><label>Mã sản phẩm pet<input name="productId" type="number" min="1" required></label><label>Mã nhà cung cấp<input name="supplierId" type="number" min="1"></label><label>Giống<input name="breed"></label><label>Tuổi<input name="age"></label><label>Giới tính<select name="gender"><option value="">Chưa rõ</option><option value="male">Đực</option><option value="female">Cái</option></select></label><label>Màu<input name="color"></label><label>Cân nặng (kg)<input name="weight" type="number" min="0.01" step="0.01"></label><label>Tiêm phòng<input name="vaccinationStatus"></label><label class="admin-checkbox"><input name="isNeutered" type="checkbox"> Đã triệt sản</label><button class="button" type="submit">Tạo hồ sơ</button></form>
+  </details>
+
+  <section class="admin-results" aria-label="Kết quả">
+    <div class="admin-results-heading"><div><h2>Danh sách <span th:text="${sectionTitle.toLowerCase()}"></span></h2><p th:text="${pagination.totalElements} + ' kết quả phù hợp'"></p></div></div>
+
+    <div th:if="${#lists.isEmpty(rows)}" class="admin-empty"><span aria-hidden="true">⌕</span><h3>Chưa có dữ liệu phù hợp</h3><p>Thử thay đổi bộ lọc hoặc tạo mục mới.</p></div>
+
+    <div th:if="${section == 'orders'}" class="admin-record-list">
+      <article th:each="row : ${rows}" class="admin-record admin-order-record">
+        <div class="admin-record-icon" aria-hidden="true">ĐH</div>
+        <div class="admin-record-main"><p class="admin-record-kicker" th:text="'ĐƠN HÀNG #' + ${row['id']}"></p><h3 th:text="'Khách hàng #' + ${row['user_id']}"></h3><p th:text="'Đặt lúc ' + ${display.date(row['order_date'])}"></p></div>
+        <div class="admin-record-tags"><span class="admin-pill" th:classappend="${' state-' + row['status']}" th:text="${display.label(row['status'])}"></span><span class="admin-pill" th:classappend="${' state-' + row['payment_status']}" th:text="${display.label(row['payment_status'])}"></span></div>
+        <div class="admin-record-end"><small>Tổng thanh toán</small><strong th:text="${display.money(row['total_amount'])}"></strong><a class="admin-link-button" th:href="@{/admin/orders/{id}(id=${row['id']})}">Xem chi tiết <span aria-hidden="true">↗</span></a></div>
+      </article>
+    </div>
+
+    <div th:if="${section == 'users'}" class="admin-record-list">
+      <article th:each="row : ${rows}" class="admin-record admin-user-record">
+        <div class="admin-record-icon admin-user-avatar" th:text="${#strings.substring(row['full_name'],0,1)}" aria-hidden="true">U</div>
+        <div class="admin-record-main"><p class="admin-record-kicker" th:text="'TÀI KHOẢN #' + ${row['id']}"></p><h3 th:text="${row['full_name']}"></h3><p th:text="${row['email']}"></p></div>
+        <div class="admin-record-tags"><span class="admin-pill" th:classappend="${' role-' + row['role']}" th:text="${row['role'].toString() == 'admin' ? 'Quản trị viên' : (row['role'].toString() == 'staff' ? 'Nhân viên' : 'Khách hàng')}"></span><span class="admin-pill" th:classappend="${row['is_active'] ? ' state-active' : ' state-locked'}" th:text="${row['is_active'] ? 'Đang hoạt động' : 'Đã khóa'}"></span></div>
+        <div th:if="${row['id'] != viewer.id}" class="admin-record-manage">
+          <button class="admin-record-manage-trigger" type="button" data-user-manage-open aria-haspopup="dialog" aria-expanded="false" th:attr="aria-controls=${'user-manage-' + row['id']},aria-label=${'Quản lý tài khoản ' + row['full_name']}">Quản lý <span aria-hidden="true">›</span></button>
+          <dialog class="admin-manage-dialog" th:id="${'user-manage-' + row['id']}" th:attr="aria-labelledby=${'user-manage-title-' + row['id']}">
+            <div class="admin-manage-dialog-heading"><div><p class="admin-card-eyebrow">QUẢN LÝ TÀI KHOẢN</p><h2 th:id="${'user-manage-title-' + row['id']}" th:text="${row['full_name']}"></h2></div><button class="admin-manage-dialog-close" type="button" data-user-manage-close aria-label="Đóng">×</button></div>
+          <div class="admin-manage-content">
+            <form th:action="@{/admin/users/{id}/role(id=${row['id']})}" method="post" class="admin-manage-panel admin-role-form">
+              <div class="admin-manage-panel-heading"><strong>Phân quyền</strong><p>Chọn quyền truy cập phù hợp với tài khoản.</p></div>
+              <div class="admin-role-controls">
+                <span class="admin-role-label">Vai trò</span>
+                <select name="role" th:attr="aria-label=${'Vai trò của ' + row['full_name']}">
+                  <option value="customer" th:selected="${row['role'].toString() == 'customer'}">Khách hàng</option>
+                  <option value="staff" th:selected="${row['role'].toString() == 'staff'}">Nhân viên</option>
+                  <option th:if="${row['role'].toString() == 'admin'}" value="admin" selected>Quản trị viên hiện tại</option>
+                </select>
+                <button class="button secondary admin-role-save-button" type="submit">Lưu quyền</button>
+              </div>
+            </form>
+            <form th:action="@{/admin/users/{id}/status(id=${row['id']})}" method="post" class="admin-manage-panel admin-status-form">
+              <input type="hidden" name="active" th:value="${!row['is_active']}">
+              <div class="admin-manage-panel-heading"><strong>Trạng thái tài khoản</strong><p th:text="${row['is_active'] ? 'Khóa tài khoản để ngừng đăng nhập.' : 'Mở khóa để tài khoản tiếp tục sử dụng.'}"></p></div>
+              <button type="submit" th:class="${row['is_active'] ? 'admin-danger-button' : 'button'}" th:text="${row['is_active'] ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}"></button>
+            </form>
+          </div>
+          </dialog>
+        </div><p th:if="${row['id'] == viewer.id}" class="admin-self-note">Tài khoản quản trị của bạn</p>
+      </article>
+    </div>
+
+    <div th:unless="${section == 'orders' or section == 'users'}" class="admin-table-wrap"><table class="admin-table"><thead><tr><th th:each="col : ${columns}" th:text="${columnLabels.get(col) ?: col}"></th><th>Thao tác</th></tr></thead><tbody>
+      <tr th:each="row : ${rows}"><td th:each="col : ${columns}" th:with="value=${row.get(col)}">
+        <span th:if="${col == 'price'}" th:text="${display.money(value)}"></span>
+        <span th:if="${col == 'record_date'}" th:text="${display.date(value)}"></span>
+        <span th:if="${col == 'is_active'}" class="admin-pill" th:classappend="${value ? ' state-active' : ' state-locked'}" th:text="${value ? 'Hoạt động' : 'Ngừng bán'}"></span>
+        <span th:if="${col == 'status' or col == 'product_type'}" th:text="${display.label(value)}"></span>
+        <span th:unless="${col == 'price' or col == 'record_date' or col == 'is_active' or col == 'status' or col == 'product_type'}" th:text="${value == null ? '—' : value}"></span>
+      </td><td class="admin-actions">
+        <a th:if="${section == 'products' or section == 'pets'}" class="admin-link-button" th:href="@{/admin/{section}/{id}(section=${section},id=${row['id']})}">Xem chi tiết ↗</a>
+        <a th:if="${section == 'inventory'}" class="admin-link-button" th:href="@{/admin/inventory/{id}(id=${row['product_id']})}">Xem biến động ↗</a>
+        <a th:if="${section == 'health'}" class="admin-link-button" th:href="@{/admin/pets/{id}(id=${row['pet_id']})}">Xem hồ sơ ↗</a>
+        <details th:if="${section == 'categories'}" class="admin-row-menu"><summary>Chỉnh sửa</summary><form th:action="@{/admin/categories/{id}/update(id=${row['id']})}" method="post" class="admin-inline"><label>Tên danh mục<input name="name" th:value="${row['name']}" required></label><button class="button secondary" type="submit">Lưu</button></form><form th:action="@{/admin/categories/{id}/delete(id=${row['id']})}" method="post"><button class="admin-danger-button" type="submit">Xóa danh mục</button></form></details>
+        <details th:if="${section == 'suppliers'}" class="admin-row-menu"><summary>Chỉnh sửa</summary><form th:action="@{/admin/suppliers/{id}/update(id=${row['id']})}" method="post" class="admin-form-grid"><label>Tên<input name="name" th:value="${row['name']}" required></label><label>Liên hệ<input name="contactInfo" th:value="${row['contact_info']}"></label><label>Địa chỉ<input name="address" th:value="${row['address']}"></label><button class="button secondary" type="submit">Lưu</button></form><form th:action="@{/admin/suppliers/{id}/delete(id=${row['id']})}" method="post"><button class="admin-danger-button" type="submit">Xóa nhà cung cấp</button></form></details>
+      </td></tr>
+    </tbody></table></div>
+  </section>
+
+  <nav class="admin-pagination" aria-label="Phân trang"><a th:if="${pagination.page > 0}" class="button secondary" th:href="${previousUrl}">← Trang trước</a><span th:text="${'Trang ' + (pagination.page + 1) + ' / ' + (pagination.totalPages == 0 ? 1 : pagination.totalPages)}"></span><a th:if="${pagination.page + 1 < pagination.totalPages}" class="button secondary" th:href="${nextUrl}">Trang sau →</a></nav>
+</main>
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

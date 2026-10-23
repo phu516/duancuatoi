@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Quản lý sản phẩm')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+<main id="main" class="container page admin-page admin-detail-page">
+  <nav th:replace="~{fragments :: adminNav}"></nav><div th:replace="~{fragments :: alerts}"></div>
+  <a class="admin-back" th:href="@{/admin/products}">← Danh sách sản phẩm</a>
+  <div class="admin-detail-heading"><div><p class="admin-kicker" th:text="${product == null ? 'THÊM MẶT HÀNG' : 'CHI TIẾT SẢN PHẨM'}"></p><h1 th:text="${product == null ? 'Tạo sản phẩm mới' : product.name}"></h1><p class="admin-lead" th:text="${product == null ? 'Điền thông tin cơ bản để sản phẩm xuất hiện trong kho.' : 'Mã sản phẩm #' + product.id + ' · ' + display.label(product.productType)}"></p></div><span th:if="${product != null}" class="admin-pill" th:classappend="${product.isActive ? ' state-active' : ' state-locked'}" th:text="${product.isActive ? 'Đang bán' : 'Chưa mở bán / ngừng bán'}"></span></div>
+
+  <div class="admin-overview-grid admin-overview-three" th:if="${product != null}"><div class="admin-overview-item"><small>Giá bán</small><strong th:text="${display.money(product.price)}"></strong></div><div class="admin-overview-item"><small>Tồn hiện tại</small><strong th:text="${product.stockQuantity}"></strong></div><div class="admin-overview-item"><small>Loại sản phẩm</small><strong th:text="${display.label(product.productType)}"></strong></div></div>
+
+  <div class="admin-detail-layout"><div class="admin-detail-main">
+    <section class="admin-detail-card"><div class="admin-card-heading"><div><p class="admin-card-eyebrow">THÔNG TIN CƠ BẢN</p><h2 th:text="${product == null ? 'Thông tin sản phẩm mới' : 'Chỉnh sửa sản phẩm'}"></h2></div></div>
+      <form th:action="${product == null ? '/admin/products/create' : '/admin/products/' + product.id + '/update'}" method="post" class="admin-form-grid admin-form-two"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+        <label class="admin-field-wide">Tên sản phẩm<input name="name" th:value="${product?.name}" maxlength="150" required placeholder="Tên hiển thị trong cửa hàng"></label>
+        <label>Danh mục<select name="categoryId" required><option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name}" th:selected="${product != null and product.categoryId == c.id}"></option></select></label>
+        <label th:if="${product == null}">Loại sản phẩm<select name="productType"><option value="food">Thức ăn</option><option value="accessory">Phụ kiện</option><option value="pet">Thú cưng</option></select></label>
+        <label>Giá bán (₫)<input name="price" th:value="${product?.price}" type="number" min="0.01" step="0.01" required></label>
+        <label th:if="${product == null}">Tồn ban đầu<input name="stockQuantity" type="number" min="0" max="1000000" value="0" required></label>
+        <label class="admin-field-wide">Đường dẫn ảnh<input name="imageUrl" th:value="${product?.imageUrl}" maxlength="1000" placeholder="https://..."></label>
+        <label class="admin-field-wide">Mô tả<textarea name="description" maxlength="10000" th:text="${product?.description}" placeholder="Thông tin giúp khách hiểu rõ sản phẩm"></textarea></label>
+        <div class="admin-form-footer admin-field-wide"><p th:if="${product == null}">Với sản phẩm thú cưng, đặt tồn ban đầu là 1 và tạo hồ sơ pet trước khi mở bán.</p><button class="button" type="submit" th:text="${product == null ? 'Tạo sản phẩm' : 'Lưu thay đổi'}"></button></div>
+      </form>
+    </section>
+  </div>
+  <aside class="admin-detail-side">
+    <section class="admin-detail-card" th:if="${product == null}"><p class="admin-card-eyebrow">QUY TRÌNH</p><h2>Sau khi tạo</h2><ol class="admin-step-list"><li>Kiểm tra thông tin sản phẩm.</li><li>Nếu là thú cưng, tạo hồ sơ pet.</li><li>Mở bán khi sản phẩm sẵn sàng.</li></ol></section>
+    <th:block th:if="${product != null}">
+      <section class="admin-detail-card admin-action-card"><p class="admin-card-eyebrow">HIỂN THỊ CỬA HÀNG</p><h2>Trạng thái bán</h2><p class="admin-action-current" th:text="${product.isActive ? 'Khách hàng đang thấy sản phẩm này.' : 'Sản phẩm hiện không xuất hiện trong cửa hàng.'}"></p><form th:action="@{/admin/products/{id}/status(id=${product.id})}" method="post"><input type="hidden" name="active" th:value="${!product.isActive}"><button class="button admin-full-button" type="submit" th:text="${product.isActive ? 'Ngừng bán' : 'Mở bán sản phẩm'}"></button></form></section>
+      <section class="admin-detail-card" th:if="${product.productType.toString() == 'pet' and product.pet == null}"><p class="admin-card-eyebrow">BƯỚC TIẾP THEO</p><h2>Tạo hồ sơ pet</h2><p>Cần hồ sơ riêng cho thú cưng trước khi mở bán.</p><a class="admin-link-button" th:href="@{/admin/pets}">Đến trang thú cưng ↗</a></section>
+      <section class="admin-detail-card" th:if="${product.pet != null}"><p class="admin-card-eyebrow">HỒ SƠ LIÊN KẾT</p><h2>Thú cưng</h2><p th:text="${product.pet.breed ?: 'Chưa cập nhật giống'}"></p><a class="admin-link-button" th:href="@{/admin/pets/{id}(id=${product.pet.id})}">Xem hồ sơ pet ↗</a></section>
+      <section class="admin-detail-card admin-danger-card"><p class="admin-card-eyebrow">QUẢN LÝ DỮ LIỆU</p><h2>Xóa sản phẩm</h2><p>Sản phẩm đã có đơn hoặc lịch sử tồn kho không thể xóa. Bạn có thể ngừng bán để giữ lịch sử.</p><details class="admin-edit-disclosure"><summary>Hiển thị thao tác xóa</summary><form th:action="@{/admin/products/{id}/delete(id=${product.id})}" method="post"><button class="admin-danger-button" type="submit">Xác nhận xóa sản phẩm</button></form></details></section>
+    </th:block>
+  </aside></div>
+</main>
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

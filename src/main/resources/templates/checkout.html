@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Thông tin đặt hàng')}">
+</head>
+<body>
+<header th:replace="~{fragments :: header}">
+</header>
+<main id="main" class="container page">
+<div th:replace="~{fragments :: steps(2)}">
+</div>
+<div class="page-heading">
+<span class="eyebrow">SẮP ĐẾN VỚI NGƯỜI BẠN NHỎ</span>
+<h1>Hoàn tất thông tin đặt hàng</h1>
+<p>Kiểm tra thông tin nhận hàng và tổng tiền trước khi xác nhận.</p>
+</div>
+<div th:replace="~{fragments :: alerts}">
+</div>
+<div th:if="${#lists.isEmpty(cart.items)}" class="empty-state">
+<h2>Giỏ hàng của bạn đang trống</h2>
+<p>Thêm sản phẩm trước khi tiếp tục thanh toán.</p>
+<a th:href="@{/products}" class="button">Khám phá cửa hàng</a>
+</div>
+<div class="commerce-layout" th:unless="${#lists.isEmpty(cart.items)}">
+<form th:action="@{/checkout/preview}" th:object="${form}" method="post" id="checkout-form" novalidate>
+<div th:if="${#fields.hasErrors('*')}" class="alert danger" role="alert">Vui lòng kiểm tra các thông tin được báo lỗi bên dưới.</div>
+<section class="panel">
+<span class="eyebrow">BƯỚC 1</span>
+<h2>Người nhận &amp; địa chỉ</h2>
+<div class="form-row">
+<label>Họ tên người nhận<input th:field="*{recipientName}" autocomplete="name" maxlength="100" required th:attr="aria-invalid=${#fields.hasErrors('recipientName')}">
+<small class="field-error" th:errors="*{recipientName}">
+</small>
+</label>
+<label>Số điện thoại<input th:field="*{recipientPhone}" type="tel" autocomplete="tel" maxlength="30" required th:attr="aria-invalid=${#fields.hasErrors('recipientPhone')}">
+<small class="field-error" th:errors="*{recipientPhone}">
+</small>
+</label>
+</div>
+<label>Địa chỉ nhận hàng<input th:field="*{address}" autocomplete="street-address" maxlength="255" th:attr="aria-invalid=${#fields.hasErrors('address')}">
+<small class="muted">Bắt buộc khi chọn vận chuyển thú cưng.</small>
+<small class="field-error" th:errors="*{address}">
+</small>
+</label>
+<label>Ghi chú<textarea th:field="*{note}" maxlength="255" rows="2" placeholder="Thông tin giúp chúng mình giao hàng thuận tiện hơn">
+</textarea>
+<small class="field-error" th:errors="*{note}">
+</small>
+</label>
+</section>
+<section class="panel">
+<span class="eyebrow">BƯỚC 2</span>
+<h2>Hình thức nhận hàng</h2>
+<label class="radio-card">
+<input type="radio" th:field="*{deliveryMethod}" value="pickup">
+<span>
+<strong>Nhận trực tiếp tại cửa hàng</strong>
+<small>Không tính phí vận chuyển.</small>
+</span>
+</label>
+<label class="radio-card">
+<input type="radio" th:field="*{deliveryMethod}" value="pet_taxi">
+<span>
+<strong>Vận chuyển thú cưng</strong>
+<small>Giao đến địa chỉ của bạn. Phí vận chuyển được cộng vào tổng thanh toán.</small>
+</span>
+</label>
+<small class="field-error" th:errors="*{deliveryMethod}"></small>
+</section>
+<section class="panel">
+<span class="eyebrow">BƯỚC 3</span>
+<h2>Thanh toán &amp; ưu đãi</h2>
+<div class="payment-choice">
+<span>✓</span>
+<div>
+<strong>Thanh toán khi nhận hàng</strong>
+<p>Đặt hàng trước, thanh toán khi nhận tại cửa hàng hoặc khi giao đến bạn.</p>
+</div>
+</div>
+<label>Mã giảm giá<input th:field="*{couponCode}" maxlength="50" placeholder="Nhập mã của bạn nếu có">
+<small class="field-error" th:errors="*{couponCode}">
+</small>
+</label>
+<button class="button full" type="submit">Kiểm tra đơn &amp; tính tổng tiền →</button>
+</section>
+</form>
+<aside>
+<section class="panel summary">
+<div class="section-heading">
+<h2>Xem lại đơn hàng</h2>
+<a th:href="@{/cart}" class="text-link small">Sửa giỏ</a>
+</div>
+<div class="mini-item" th:each="item : ${cart.items}">
+<img class="fallback-image" th:src="${display.image(item.image_url)}" th:alt="${item.name}">
+<div>
+<strong th:text="${item.name}">
+</strong>
+<small th:text="'Số lượng: ' + ${item.quantity}">
+</small>
+<span class="price" th:text="${display.money(item.line_total)}">
+</span>
+</div>
+</div>
+<div th:if="${quote == null}">
+<div class="summary-row">
+<span>Tạm tính</span>
+<strong th:text="${display.money(cart.subtotal)}">
+</strong>
+</div>
+<p class="muted">Điền thông tin bên cạnh và bấm tính tổng tiền để tiếp tục.</p>
+</div>
+<div th:if="${quote != null}">
+<div th:each="issue : ${quote.issues}" class="alert danger" th:text="${issue.message}">
+</div>
+<div class="summary-row">
+<span>Tạm tính</span>
+<strong th:text="${display.money(quote.subtotal)}">
+</strong>
+</div>
+<div class="summary-row">
+<span>Vận chuyển</span>
+<strong th:text="${display.money(quote.shipping_fee)}">
+</strong>
+</div>
+<div class="summary-row">
+<span>Giảm giá</span>
+<strong class="green-text" th:text="${display.money(quote.discount_amount)}">
+</strong>
+</div>
+<div class="summary-total">
+<span>Tổng thanh toán</span>
+<strong th:text="${display.money(quote.total_amount)}">
+</strong>
+</div>
+<div th:if="${quote.can_place_order}" id="confirmed-quote">
+<div class="shipping-preview">
+<strong th:text="${form.recipientName}">
+</strong>
+<p th:text="${display.label(form.deliveryMethod)}">
+</p>
+<p th:text="${form.address}">
+</p>
+<p th:text="${form.recipientPhone}">
+</p>
+</div>
+<form th:action="@{/checkout/place}" method="post" id="place-order">
+<input type="hidden" name="checkoutKey" th:value="${checkoutKey}">
+<button type="submit" class="button full">Xác nhận đặt hàng →</button>
+</form>
+<p class="summary-note">Thanh toán khi nhận hàng. Đơn mới sẽ chờ cửa hàng xác nhận.</p>
+</div>
+<p id="quote-changed" class="alert" hidden>Thông tin đã thay đổi. Vui lòng tính lại tổng tiền.</p>
+</div>
+</section>
+</aside>
+</div>
+</main>
+<footer th:replace="~{fragments :: footer}">
+</footer>
+</body>
+</html>

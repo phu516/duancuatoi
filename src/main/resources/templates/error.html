@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Không thể hoàn tất yêu cầu')}">
+</head>
+<body>
+<main id="main" class="container page">
+<a class="brand" th:href="@{/}">
+<img th:src="@{/images/paw.svg}" width="38" height="38" alt="">
+<span>PetVibe</span>
+</a>
+<div class="empty-state error-state">
+<span class="eyebrow" th:text="'PETVIBE · ' + ${status ?: 500}">
+</span>
+<h1 th:text="${status == 404 ? 'Trang bạn tìm chưa có ở đây.' : 'Có một chút gián đoạn.'}">
+</h1>
+<p th:text="${!#strings.isEmpty(message) ? message : (status == 403 ? 'Phiên biểu mẫu đã hết hiệu lực hoặc bạn chưa có quyền. Hãy tải lại trang rồi thử lại.' : 'Vui lòng thử lại sau hoặc quay về cửa hàng.')} ">
+</p>
+<div class="button-row">
+<a class="button" th:href="@{/}">Về trang chủ</a>
+<a class="button secondary" th:href="@{/cart}">Xem giỏ hàng</a>
+<a class="text-link" th:href="@{/login}">Đăng nhập</a>
+</div>
+</div>
+</main>
+</body>
+</html>

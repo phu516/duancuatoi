@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${title} + ' · PetVibe'">PetVibe</title>
+  <link rel="icon" th:href="@{/images/paw.svg}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/storefront.css}">
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+  <script defer th:src="@{/js/storefront.js}">
+</script>
+</head>
+<body>
+<header th:fragment="header">
+  <a href="#main" class="skip-link">Đi đến nội dung</a>
+  <div class="announcement">Một người bạn nhỏ. Một niềm vui lớn. <span>Chào mừng đến với PetVibe</span>
+</div>
+  <div class="site-header container">
+    <a th:href="@{/}" class="brand" aria-label="PetVibe — Trang chủ">
+<img th:src="@{/images/paw.svg}" alt="" width="38" height="38">
+<span>PetVibe<small>THẾ GIỚI THÚ CƯNG</small>
+</span>
+</a>
+    <form class="search" th:action="@{/products}" method="get" role="search">
+      <input name="keyword" type="search" placeholder="Tìm người bạn nhỏ, thức ăn, phụ kiện..." aria-label="Tìm sản phẩm" maxlength="150">
+      <button type="submit" aria-label="Tìm kiếm">
+<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+<circle cx="10" cy="10" r="6"/>
+<path d="m15 15 5 5"/>
+</svg>
+</button>
+    </form>
+    <div class="header-actions">
+      <a th:href="@{/cart}" class="bag" aria-label="Giỏ hàng">
+<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7">
+<path d="M5 7h14l1 14H4L5 7Z"/>
+<path d="M8 8V6a4 4 0 0 1 8 0v2"/>
+</svg>
+<b th:text="${cartCount ?: 0}">0</b>
+</a>
+      <a th:if="${viewer == null}" th:href="@{/login}" class="account-link">
+<span class="avatar">P</span>
+<span>
+<small>Tài khoản</small>Đăng nhập</span>
+</a>
+      <details th:if="${viewer != null}" class="account-menu">
+<summary>
+<span class="avatar" th:text="${#strings.substring(viewer.fullName,0,1)}">P</span>
+<span>
+<small>Chào bạn,</small>
+<strong th:text="${viewer.fullName}">Khách hàng</strong>
+</span>
+<span>⌄</span>
+</summary>
+<div class="account-dropdown">
+<p th:text="${viewer.email}">
+</p>
+<a th:href="@{/orders}">Đơn hàng của tôi →</a>
+<a th:href="@{/account}">Hồ sơ của tôi →</a>
+<a th:if="${viewer.role.toString() == 'staff' or viewer.role.toString() == 'admin'}" th:href="@{/admin}">Quản trị cửa hàng →</a>
+<form th:action="@{/logout}" method="post">
+<button class="text-button" type="submit">Đăng xuất</button>
+</form>
+</div>
+</details>
+    </div>
+  </div>
+  <nav class="site-nav container" aria-label="Điều hướng chính">
+    <a th:href="@{/}" th:classappend="${currentPath == '/'} ? 'active'">Trang chủ</a>
+    <a th:href="@{/pets}">Thú cưng</a>
+<a th:href="@{/products(product_type='food')}">Thức ăn &amp; dinh dưỡng</a>
+    <a th:href="@{/products(product_type='accessory')}">Phụ kiện</a>
+<a th:href="@{/products}">Tất cả sản phẩm</a>
+<a th:href="@{/orders}">Đơn hàng của tôi</a>
+  </nav>
+</header>
+<nav th:fragment="adminNav" class="admin-workspace-nav" aria-label="Điều hướng quản trị">
+  <a th:href="@{/admin}" th:classappend="${currentPath == '/admin' ? 'active' : ''}">Tổng quan</a>
+  <a th:href="@{/admin/orders}" th:classappend="${#strings.startsWith(currentPath,'/admin/orders') ? 'active' : ''}">Đơn hàng</a>
+  <a th:href="@{/admin/inventory}" th:classappend="${#strings.startsWith(currentPath,'/admin/inventory') ? 'active' : ''}">Tồn kho</a>
+  <a th:href="@{/admin/health}" th:classappend="${#strings.startsWith(currentPath,'/admin/health') ? 'active' : ''}">Sức khỏe</a>
+  <th:block th:if="${viewer != null and viewer.role.toString() == 'admin'}">
+    <a th:href="@{/admin/users}" th:classappend="${#strings.startsWith(currentPath,'/admin/users') ? 'active' : ''}">Người dùng</a>
+    <a th:href="@{/admin/products}" th:classappend="${#strings.startsWith(currentPath,'/admin/products') ? 'active' : ''}">Sản phẩm</a>
+    <a th:href="@{/admin/pets}" th:classappend="${#strings.startsWith(currentPath,'/admin/pets') ? 'active' : ''}">Thú cưng</a>
+    <a th:href="@{/admin/categories}" th:classappend="${#strings.startsWith(currentPath,'/admin/categories') ? 'active' : ''}">Danh mục</a>
+    <a th:href="@{/admin/suppliers}" th:classappend="${#strings.startsWith(currentPath,'/admin/suppliers') ? 'active' : ''}">Nhà cung cấp</a>
+  </th:block>
+</nav>
+<div th:fragment="alerts" class="alerts" aria-live="polite">
+  <div th:if="${successMessage}" class="alert success" role="status" th:text="${successMessage}">
+</div>
+  <div th:if="${errorMessage}" class="alert danger" role="alert" th:text="${errorMessage}">
+</div>
+</div>
+<article th:fragment="card(p)" class="product-card">
+  <a class="product-photo" th:href="@{/products/{id}(id=${p.id})}">
+<img th:src="${display.image(p.imageUrl)}" th:alt="${p.name}" loading="lazy" class="fallback-image">
+<span class="badge" th:text="${display.label(p.productType)}">Sản phẩm</span>
+<span th:if="${p.stockQuantity == 0}" class="sold-out">Tạm hết hàng</span>
+</a>
+  <div class="product-info">
+<p class="eyebrow" th:text="${p.stockQuantity > 0 ? 'Đang có tại cửa hàng' : 'Hẹn bạn lần tới'}">
+</p>
+<h3>
+<a th:href="@{/products/{id}(id=${p.id})}" th:text="${p.name}">
+</a>
+</h3>
+<div class="card-bottom">
+<strong class="price" th:text="${display.money(p.price)}">
+</strong>
+<a class="circle-link" th:href="@{/products/{id}(id=${p.id})}" th:aria-label="'Xem ' + ${p.name}"><img th:src="@{/images/paw-mark.svg}" alt="" width="24" height="24"></a>
+</div>
+</div>
+</article>
+<nav th:fragment="pagination" class="pagination" aria-label="Phân trang" th:if="${pagination.totalPages > 1}">
+<a th:if="${pagination.page > 0}" th:href="${previousUrl}" class="button secondary">← Trang trước</a>
+<span th:text="'Trang ' + ${pagination.page + 1} + ' / ' + ${pagination.totalPages}">
+</span>
+<a th:if="${pagination.page + 1 < pagination.totalPages}" th:href="${nextUrl}" class="button secondary">Trang sau →</a>
+</nav>
+<nav th:fragment="steps(active)" class="checkout-steps" aria-label="Các bước đặt hàng">
+<a th:href="@{/cart}" th:classappend="${active >= 1} ? 'selected'">
+<b>1</b>Giỏ hàng</a>
+<span>
+</span>
+<a th:href="@{/checkout}" th:classappend="${active >= 2} ? 'selected'">
+<b>2</b>Thanh toán</a>
+<span>
+</span>
+<div th:classappend="${active >= 3} ? 'selected'">
+<b>3</b>Hoàn tất</div>
+</nav>
+<footer th:fragment="footer" class="site-footer">
+<div class="container footer-grid">
+<div>
+<a th:href="@{/}" class="brand">
+<img th:src="@{/images/paw.svg}" alt="" width="34" height="34">
+<span>PetVibe</span>
+</a>
+<p>Đồng hành cùng bạn xây dựng cuộc sống khỏe mạnh, ấm êm và tràn ngập niềm vui bên thú cưng.</p>
+<span class="badge green">Chọn yêu thương, chọn PetVibe</span>
+</div>
+<div>
+<h3>Khám phá cửa hàng</h3>
+<a th:href="@{/products(product_type='pet')}">Thú cưng tìm nhà</a>
+<a th:href="@{/products(product_type='food')}">Thức ăn &amp; dinh dưỡng</a>
+<a th:href="@{/products(product_type='accessory')}">Phụ kiện mỗi ngày</a>
+</div>
+<div>
+<h3>Góc của bạn</h3>
+<a th:href="@{/cart}">Giỏ hàng</a>
+<a th:href="@{/orders}">Theo dõi đơn hàng</a>
+<a th:href="@{/register}">Trở thành thành viên</a>
+</div>
+<div>
+<h3>Mua sắm cùng PetVibe</h3>
+<p>Chọn sản phẩm yêu thích, đặt hàng và thanh toán khi nhận hàng.</p>
+<a class="button secondary" th:href="@{/products}">Khám phá ngay ↗</a>
+</div>
+</div>
+<div class="container footer-bottom">
+<span>© PetVibe. Giữ trọn tình yêu với thú cưng.</span>
+<span>Được tạo nên từ những điều nhỏ bé ♡</span>
+</div>
+</footer>
+</body>
+</html>

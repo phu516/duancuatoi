@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Giỏ hàng của bạn')}">
+</head>
+<body>
+<header th:replace="~{fragments :: header}">
+</header>
+<main id="main" class="container page">
+<div th:replace="~{fragments :: steps(1)}">
+</div>
+<div class="page-heading">
+<span class="eyebrow">CHUẨN BỊ NHỮNG ĐIỀU TỐT NHẤT</span>
+<h1>Giỏ hàng của bạn</h1>
+<p>Kiểm tra những món quà dành cho người bạn nhỏ.</p>
+</div>
+<div th:replace="~{fragments :: alerts}">
+</div>
+<div th:if="${#lists.isEmpty(cart.items)}" class="empty-state">
+<span class="empty-icon">♡</span>
+<h2>Giỏ hàng đang chờ những điều dễ thương</h2>
+<p>Khám phá cửa hàng và chọn món đồ đầu tiên nhé.</p>
+<a class="button" th:href="@{/products}">Khám phá cửa hàng →</a>
+</div>
+<div class="commerce-layout" th:unless="${#lists.isEmpty(cart.items)}">
+<section class="panel cart-panel">
+<div class="section-heading">
+<h2>Sản phẩm đã chọn</h2>
+<span class="badge" th:text="${#lists.size(cart.items)} + ' sản phẩm'">
+</span>
+</div>
+<article class="cart-line" th:each="item : ${cart.items}">
+<a th:href="@{/products/{id}(id=${item.product_id})}">
+<img class="fallback-image" th:src="${display.image(item.image_url)}" th:alt="${item.name}">
+</a>
+<div class="cart-line-info">
+<span class="eyebrow" th:text="${display.label(item.product_type)}">
+</span>
+<h3>
+<a th:href="@{/products/{id}(id=${item.product_id})}" th:text="${item.name}">
+</a>
+</h3>
+<p class="price" th:text="${display.money(item.unit_price)}">
+</p>
+<p th:if="${!item.available}" class="field-error">Sản phẩm không còn đủ số lượng hoặc đang ngừng bán. Vui lòng cập nhật giỏ hàng.</p>
+<form th:if="${item.product_type != 'pet'}" th:action="@{/cart/{id}/quantity(id=${item.product_id})}" method="post" class="quantity-form">
+<label th:for="'quantity-' + ${item.product_id}" class="sr-only">Số lượng</label>
+<input th:id="'quantity-' + ${item.product_id}" type="number" name="quantity" min="1" max="1000000" th:value="${item.quantity}" required>
+<button type="submit" class="text-button">Cập nhật</button>
+</form>
+<p th:if="${item.product_type == 'pet'}" class="small muted">Số lượng: 1 bé</p>
+</div>
+<div class="cart-line-total">
+<strong th:text="${display.money(item.line_total)}">
+</strong>
+<form th:action="@{/cart/{id}/remove(id=${item.product_id})}" method="post">
+<button type="submit" class="text-button muted">Xóa</button>
+</form>
+</div>
+</article>
+<a class="text-link" th:href="@{/products}">← Tiếp tục mua sắm</a>
+<form th:action="@{/cart/clear}" method="post"><button class="text-button" type="submit">Xóa toàn bộ giỏ hàng</button></form>
+</section>
+<aside class="panel summary">
+<span class="eyebrow">DÀNH CHO BẠN NHỎ</span>
+<h2>Tóm tắt giỏ hàng</h2>
+<div class="summary-row">
+<span>Tạm tính</span>
+<strong th:text="${display.money(cart.subtotal)}">
+</strong>
+</div>
+<p class="muted small">Phí giao hàng và ưu đãi được tính ở bước tiếp theo.</p>
+<div class="summary-total">
+<span>Tạm tính hàng hóa</span>
+<strong th:text="${display.money(cart.subtotal)}">
+</strong>
+</div>
+<a th:href="@{/checkout}" class="button full">Tiến hành thanh toán →</a>
+<p class="summary-note">Sản phẩm được giữ sau khi đặt hàng thành công.</p>
+</aside>
+</div>
+</main>
+<footer th:replace="~{fragments :: footer}">
+</footer>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Chi tiết đơn hàng')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+<main id="main" class="container page admin-page admin-detail-page">
+  <nav th:replace="~{fragments :: adminNav}"></nav>
+  <div th:replace="~{fragments :: alerts}"></div>
+  <a class="admin-back" th:href="@{/admin/orders}">← Danh sách đơn hàng</a>
+
+  <div class="admin-detail-heading">
+    <div><p class="admin-kicker">XỬ LÝ ĐƠN HÀNG</p><h1 th:text="'Đơn hàng #' + ${order.id}"></h1>
+      <p class="admin-lead" th:text="'Đặt ngày ' + ${display.date(order.order_date)} + ' · Khách hàng #' + ${order.user_id}"></p></div>
+    <div class="admin-detail-badges"><span class="admin-pill" th:classappend="${' state-' + order.status}" th:text="${display.label(order.status)}"></span><span class="admin-pill" th:classappend="${' state-' + order.payment_status}" th:text="${display.label(order.payment_status)}"></span></div>
+  </div>
+
+  <div class="admin-overview-grid">
+    <div class="admin-overview-item"><small>Tổng đơn hàng</small><strong th:text="${display.money(order.total_amount)}"></strong></div>
+    <div class="admin-overview-item"><small>Sản phẩm</small><strong th:text="${#lists.size(order.items)} + ' loại'"></strong></div>
+    <div class="admin-overview-item"><small>Phương thức thanh toán</small><strong th:text="${display.label(order.payment_method)}"></strong></div>
+    <div class="admin-overview-item"><small>Giao nhận</small><strong th:text="${display.label(order.shipping.delivery_method)}"></strong></div>
+  </div>
+
+  <div class="admin-detail-layout">
+    <div class="admin-detail-main">
+      <section class="admin-detail-card"><div class="admin-card-heading"><div><p class="admin-card-eyebrow">01 · ĐƠN HÀNG</p><h2>Sản phẩm đã đặt</h2></div><span th:text="${#lists.size(order.items)} + ' loại'"></span></div>
+        <div class="admin-order-items"><div class="admin-order-item" th:each="item : ${order.items}">
+          <div><a th:href="@{/admin/products/{id}(id=${item.product_id})}" th:text="${item.product_name}"></a><small th:text="${'Mã sản phẩm #' + item.product_id + ' · ' + display.money(item.unit_price) + ' × ' + item.quantity}"></small></div>
+          <strong th:text="${display.money(item.line_total)}"></strong>
+        </div></div>
+        <div class="admin-order-totals"><div><span>Tạm tính</span><strong th:text="${display.money(order.subtotal)}"></strong></div><div><span>Phí giao hàng</span><strong th:text="${display.money(order.shipping_fee)}"></strong></div><div><span>Giảm giá</span><strong th:text="${display.money(order.discount_amount)}"></strong></div><div class="admin-order-grand"><span>Tổng thanh toán</span><strong th:text="${display.money(order.total_amount)}"></strong></div></div>
+      </section>
+
+      <section class="admin-detail-card"><div class="admin-card-heading"><div><p class="admin-card-eyebrow">02 · GIAO NHẬN</p><h2>Thông tin người nhận</h2></div></div>
+        <dl class="admin-info-grid"><div><dt>Người nhận</dt><dd th:text="${order.shipping.recipient_name}"></dd></div><div><dt>Số điện thoại</dt><dd th:text="${order.shipping.recipient_phone}"></dd></div><div><dt>Hình thức</dt><dd th:text="${display.label(order.shipping.delivery_method)}"></dd></div><div><dt>Địa chỉ</dt><dd th:text="${order.shipping.address ?: 'Nhận tại cửa hàng'}"></dd></div><div th:if="${order.shipping.note != null}"><dt>Ghi chú</dt><dd th:text="${order.shipping.note}"></dd></div></dl>
+        <details class="admin-edit-disclosure" th:if="${order.status == 'pending' or order.status == 'confirmed'}"><summary>Chỉnh sửa thông tin giao nhận</summary>
+          <form th:action="@{/admin/orders/{id}/shipping(id=${order.id})}" method="post" class="admin-form-grid admin-form-two"><label>Người nhận<input name="recipientName" th:value="${order.shipping.recipient_name}" required></label><label>Số điện thoại<input name="recipientPhone" th:value="${order.shipping.recipient_phone}" required></label><label class="admin-field-wide">Địa chỉ<input name="address" th:value="${order.shipping.address}"></label><label class="admin-field-wide">Ghi chú<input name="note" th:value="${order.shipping.note}"></label><button class="button" type="submit">Lưu giao nhận</button></form>
+        </details>
+      </section>
+
+      <section class="admin-detail-card"><div class="admin-card-heading"><div><p class="admin-card-eyebrow">03 · LỊCH SỬ</p><h2>Hoạt động của đơn</h2></div></div>
+        <div class="admin-timeline"><div class="admin-timeline-item" th:each="event : ${events.data}"><span class="admin-timeline-dot" aria-hidden="true"></span><div><strong th:text="${event.event_type == 'payment' ? 'Thanh toán' : (event.event_type == 'shipping' ? 'Giao nhận' : 'Trạng thái đơn')}"></strong><p th:text="${event.new_value == null ? 'Đã cập nhật' : display.label(event.new_value)}"></p><small th:text="${display.date(event.created_at)}"></small><small th:if="${event.note != null}" th:text="${' · ' + event.note}"></small></div></div><p th:if="${#lists.isEmpty(events.data)}">Chưa có hoạt động.</p></div>
+        <nav class="admin-pagination" aria-label="Phân trang lịch sử"><a th:if="${events.pagination.page > 0}" th:href="@{/admin/orders/{id}(id=${order.id},page=${events.pagination.page - 1})}">← Trước</a><span th:text="${'Trang ' + (events.pagination.page + 1)}"></span><a th:if="${events.pagination.page + 1 < events.pagination.totalPages}" th:href="@{/admin/orders/{id}(id=${order.id},page=${events.pagination.page + 1})}">Sau →</a></nav>
+      </section>
+    </div>
+
+    <aside class="admin-detail-side">
+      <section class="admin-detail-card admin-action-card"><p class="admin-card-eyebrow">BƯỚC TIẾP THEO</p><h2>Tiến trình đơn</h2>
+        <p class="admin-action-current">Hiện tại: <strong th:text="${display.label(order.status)}"></strong></p>
+        <div class="alert danger" role="alert" th:if="${order.status == 'shipping' and order.payment_status != 'paid'}">Chưa thể hoàn tất đơn hàng vì chưa ghi nhận đã thu tiền. Hãy ghi nhận thanh toán ở mục “Thu / hoàn tiền” trước.</div>
+        <form th:if="${order.status == 'pending' or order.status == 'confirmed' or order.status == 'shipping'}" th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post">
+          <input type="hidden" name="status" th:value="${order.status == 'pending' ? 'confirmed' : (order.status == 'confirmed' ? 'shipping' : 'completed')}">
+          <button class="button admin-full-button" type="submit" th:disabled="${order.status == 'shipping' and order.payment_status != 'paid'}" th:text="${order.status == 'pending' ? 'Xác nhận đơn hàng' : (order.status == 'confirmed' ? 'Chuyển sang đang giao' : (order.payment_status == 'paid' ? 'Hoàn tất đơn hàng' : 'Chưa thể hoàn tất đơn hàng'))}"></button>
+        </form>
+        <p class="admin-help-text" th:if="${order.status == 'pending' and order.payment_method != 'cash' and order.payment_status != 'paid'}">Cần ghi nhận đã thu tiền trước khi xác nhận đơn này.</p>
+        <p class="admin-help-text" th:if="${order.status == 'completed' or order.status == 'cancelled'}">Đơn đã kết thúc, không còn bước xử lý tiếp theo.</p>
+      </section>
+
+      <section class="admin-detail-card admin-action-card"><p class="admin-card-eyebrow">THANH TOÁN</p><h2>Thu / hoàn tiền</h2>
+        <p class="admin-action-current">Hiện tại: <strong th:text="${display.label(order.payment_status)}"></strong></p>
+        <form th:if="${order.payment_status == 'unpaid' and order.status != 'cancelled'}" th:action="@{/admin/orders/{id}/payment(id=${order.id})}" method="post"><input type="hidden" name="paymentStatus" value="paid"><label>Ghi chú giao dịch (không bắt buộc)<input name="note" maxlength="255" placeholder="Chỉ nhập khi cần giải thích thêm"></label><button class="button admin-full-button" type="submit">Ghi nhận đã thu</button></form>
+        <form th:if="${order.payment_status == 'paid' and order.status == 'cancelled'}" th:action="@{/admin/orders/{id}/payment(id=${order.id})}" method="post"><input type="hidden" name="paymentStatus" value="refunded"><label>Ghi chú hoàn tiền (không bắt buộc)<input name="note" maxlength="255" placeholder="Chỉ nhập khi cần giải thích thêm"></label><button class="button secondary admin-full-button" type="submit">Ghi nhận đã hoàn</button></form>
+        <p class="admin-help-text">Đây là ghi nhận thủ công. Hệ thống không tự chuyển tiền.</p>
+      </section>
+
+      <section class="admin-detail-card admin-danger-card" th:if="${order.status == 'pending'}"><p class="admin-card-eyebrow">CẦN CÂN NHẮC</p><h2>Hủy đơn hàng</h2>
+        <p>Chỉ hủy được khi đơn đang chờ. Hàng tồn sẽ được trả lại kho.</p>
+        <details class="admin-edit-disclosure"><summary>Hiển thị form hủy đơn</summary><form th:action="@{/admin/orders/{id}/cancel(id=${order.id})}" method="post"><label>Lý do hủy<textarea name="reason" maxlength="255" required></textarea></label><button class="admin-danger-button" type="submit">Xác nhận hủy đơn</button></form></details>
+      </section>
+      <section class="admin-detail-card" th:if="${order.cancellation != null}"><p class="admin-card-eyebrow">THÔNG TIN HỦY</p><p th:text="${order.cancellation.reason}"></p><small th:text="${display.date(order.cancellation.cancelled_at)}"></small></section>
+    </aside>
+  </div>
+</main>
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

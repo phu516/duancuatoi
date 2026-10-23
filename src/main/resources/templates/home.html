@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Đón bạn bốn chân, trao trọn yêu thương')}">
+</head>
+<body>
+<header th:replace="~{fragments :: header}">
+</header>
+<main id="main">
+<section class="hero container">
+<div class="hero-copy">
+<div th:replace="~{fragments :: alerts}">
+</div>
+<span class="eyebrow pill">MỘT THẾ GIỚI NHỎ, ĐẦY ẮP YÊU THƯƠNG</span>
+<h1>Đón bạn bốn chân,<br>
+<em>trao trọn yêu thương.</em>
+</h1>
+<p>Tìm người bạn nhỏ phù hợp và chuẩn bị những điều tốt nhất cho hành trình cùng nhau. Từ bữa ăn ngon đến góc ngủ thật êm.</p>
+<div class="button-row">
+<a class="button" th:href="@{/products(product_type='pet')}">Đón bạn nhỏ ngay <span>→</span>
+</a>
+<a class="button secondary" th:href="@{/products}">Khám phá cửa hàng</a>
+</div>
+<div class="hero-perks">
+<span>
+<b>♡</b>Chọn bằng trái tim</span>
+<span>
+<b>✧</b>Chăm sóc mỗi ngày</span>
+<span>
+<b>⌂</b>Một mái nhà ấm</span>
+</div>
+</div>
+<div class="hero-art">
+<img class="hero-image fallback-image" th:src="@{/images/hero-pets.jpg}" alt="Cún Corgi và mèo Anh lông ngắn trong cửa hàng PetVibe" fetchpriority="high">
+<div class="floating-note">
+<span>♡</span>
+<div>
+<strong>Bạn nhỏ, niềm vui lớn</strong>
+<small>Sẵn sàng cho một hành trình mới</small>
+</div>
+</div>
+<span class="hero-sticker">HELLO,<br>NEW FRIEND!</span>
+</div>
+</section>
+<section class="section tint">
+<div class="container">
+<div class="section-heading">
+<div>
+<span class="eyebrow">TÌM ĐIỀU BẠN CẦN</span>
+<h2>Mỗi nhu cầu, một lựa chọn</h2>
+</div>
+<p>Khám phá những danh mục đang có tại PetVibe.</p>
+</div>
+<div class="category-grid">
+<a th:each="c : ${categories}" th:href="@{/products(category_id=${c.id})}" class="category-card">
+<img class="fallback-image" th:src="${display.image(c.image_url)}" th:alt="${c.name}" loading="lazy">
+<div>
+<span class="badge green" th:text="${c.product_count} + ' sản phẩm'">
+</span>
+<h3 th:text="${c.name}">
+</h3>
+<span class="text-link">Khám phá</span>
+</div>
+</a>
+</div>
+<p th:if="${#lists.isEmpty(categories)}" class="empty-inline">Danh mục đang được cập nhật. Hẹn bạn quay lại sớm.</p>
+</div>
+</section>
+<section class="section container">
+<div class="section-heading">
+<div>
+<span class="eyebrow">SẴN SÀNG CHO MỘT TỔ ẤM MỚI</span>
+<h2>Các bé đang chờ bạn đón về</h2>
+</div>
+<a class="text-link" th:href="@{/products(product_type='pet')}">Xem tất cả thú cưng →</a>
+</div>
+<div class="product-grid">
+<th:block th:each="p : ${pets}">
+<article th:replace="~{fragments :: card(${p})}"></article>
+</th:block>
+</div>
+<p th:if="${#lists.isEmpty(pets)}" class="empty-inline">Các bé đang được cập nhật. Bạn có thể khám phá thức ăn và phụ kiện bên dưới.</p>
+</section>
+<section class="section tint">
+<div class="container">
+<div class="section-heading">
+<div>
+<span class="eyebrow">CHĂM CHÚT TỪNG BỮA ĂN</span>
+<h2>Dinh dưỡng cho ngày vui khỏe</h2>
+</div>
+<a class="text-link" th:href="@{/products(product_type='food')}">Xem thức ăn →</a>
+</div>
+<div class="product-grid">
+<th:block th:each="p : ${essentials}">
+<article th:replace="~{fragments :: card(${p})}"></article>
+</th:block>
+</div>
+<p th:if="${#lists.isEmpty(essentials)}" class="empty-inline">Sản phẩm dinh dưỡng đang được cập nhật.</p>
+</div>
+</section>
+<section class="section container">
+<div class="care-panel">
+<span class="eyebrow">ĐỒNG HÀNH TRÊN TỪNG CHẶNG ĐƯỜNG</span>
+<h2>Những điều nhỏ, làm nên niềm vui lớn.</h2>
+<div class="care-grid">
+<article>
+<span class="care-icon">♡</span>
+<h3>Hiểu người bạn nhỏ</h3>
+<p>Xem đặc điểm và hồ sơ sức khỏe của từng bé trước khi lựa chọn.</p>
+</article>
+<article>
+<span class="care-icon green">⌂</span>
+<h3>Chuẩn bị một tổ ấm</h3>
+<p>Khám phá thức ăn và phụ kiện cho cuộc sống hằng ngày của thú cưng.</p>
+</article>
+<article>
+<span class="care-icon purple">↗</span>
+<h3>Theo dõi dễ dàng</h3>
+<p>Thông tin đơn hàng và tình trạng giao nhận luôn ở trong tài khoản của bạn.</p>
+</article>
+</div>
+</div>
+</section>
+<section class="section tint" th:if="${!#lists.isEmpty(testimonials)}">
+<div class="container">
+<div class="section-heading centered">
+<div>
+<span class="eyebrow">NHỮNG CHIA SẺ TỪ KHÁCH HÀNG</span>
+<h2>Khoảnh khắc kết nối yêu thương</h2>
+</div>
+</div>
+<div class="testimonials">
+<article th:each="r : ${testimonials}" class="review-card">
+<div class="stars" th:text="${r.rating} + ' / 5 ★'">
+</div>
+<p th:text="${r.comment}">
+</p>
+<strong th:text="${r.full_name}">
+</strong>
+<small th:text="${r.product_name}">
+</small>
+</article>
+</div>
+</div>
+</section>
+<section class="container section">
+<div class="join-banner">
+<div>
+<h2>Hành trình mới bắt đầu từ đây.</h2>
+<p>Lưu giỏ hàng và theo dõi những món quà dành cho bạn nhỏ.</p>
+</div>
+<a th:href="${viewer == null ? '/register' : '/products'}" class="button" th:text="${viewer == null ? 'Tham gia PetVibe →' : 'Tiếp tục khám phá →'}">
+</a>
+</div>
+</section>
+</main>
+<footer th:replace="~{fragments :: footer}">
+</footer>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head(${product.name})}">
+</head>
+<body>
+<header th:replace="~{fragments :: header}">
+</header>
+<main id="main" class="container page">
+<div class="breadcrumbs">
+<a th:href="@{/}">Trang chủ</a>
+<span>›</span>
+<a th:href="@{/products}">Cửa hàng</a>
+<span>›</span>
+<span th:text="${product.name}">
+</span>
+</div>
+<div th:replace="~{fragments :: alerts}">
+</div>
+<section class="detail-layout">
+<div class="detail-photo">
+<img class="fallback-image" th:src="${display.image(product.imageUrl)}" th:alt="${product.name}">
+</div>
+<div class="detail-copy">
+<span class="badge green" th:text="${display.label(product.productType)}">
+</span>
+<h1 th:text="${product.name}">
+</h1>
+<a href="#reviews" class="rating-link" th:text="${product.reviewSummary.count > 0 ? '★ ' + product.reviewSummary.average + ' · ' + product.reviewSummary.count + ' đánh giá' : 'Chưa có đánh giá'}">
+</a>
+<p class="detail-price" th:text="${display.money(product.price)}">
+</p>
+<p class="description" th:text="${product.description ?: 'Thông tin sản phẩm đang được cập nhật.'}">
+</p>
+<div class="pet-facts" th:if="${product.pet != null}">
+<div>
+<small>Giống</small>
+<strong th:text="${product.pet.breed ?: 'Chưa cập nhật'}">
+</strong>
+</div>
+<div>
+<small>Tuổi</small>
+<strong th:text="${product.pet.age ?: 'Chưa cập nhật'}">
+</strong>
+</div>
+<div>
+<small>Giới tính</small>
+<strong th:text="${display.label(product.pet.gender)}">
+</strong>
+</div>
+<div>
+<small>Cân nặng</small>
+<strong th:text="${product.pet.weight != null ? product.pet.weight + ' kg' : 'Chưa cập nhật'}">
+</strong>
+</div>
+<div>
+<small>Màu sắc</small>
+<strong th:text="${product.pet.color ?: 'Chưa cập nhật'}">
+</strong>
+</div>
+<div>
+<small>Trạng thái</small>
+<strong th:text="${display.label(product.pet.status)}">
+</strong>
+</div>
+</div>
+<p class="stock-note" th:text="${product.stockQuantity > 0 ? 'Có sẵn · ' + product.stockQuantity + ' trong kho' : 'Sản phẩm hiện không còn sẵn'}">
+</p>
+<form th:action="@{/cart/add}" method="post" class="buy-form" th:if="${product.stockQuantity > 0}">
+<input type="hidden" name="productId" th:value="${product.id}">
+<label th:if="${product.productType.toString() != 'pet'}">Số lượng<input name="quantity" type="number" value="1" min="1" th:max="${product.stockQuantity}" required>
+</label>
+<input th:if="${product.productType.toString() == 'pet'}" name="quantity" type="hidden" value="1">
+<button class="button" type="submit">Thêm vào giỏ hàng →</button>
+</form>
+<p class="muted small" th:if="${viewer == null}">Bạn cần đăng nhập để thêm sản phẩm vào giỏ.</p>
+<a th:if="${viewer == null}" class="text-link" th:href="@{/login}">Đăng nhập →</a>
+</div>
+</section>
+<section class="section" th:if="${product.pet != null}">
+<span class="eyebrow">HIỂU THÊM VỀ BẠN NHỎ</span>
+<h2>Hồ sơ sức khỏe</h2>
+<div class="panel">
+<p>
+<strong>Tiêm phòng: </strong>
+<span th:text="${product.pet.vaccinationStatus ?: 'Chưa cập nhật'}">
+</span>
+</p>
+<p>
+<strong>Triệt sản: </strong>
+<span th:text="${product.pet.isNeutered ? 'Đã triệt sản' : 'Chưa triệt sản'}">
+</span>
+</p>
+<div class="health-grid">
+<article th:each="h : ${health}" class="health-card">
+<small th:text="${display.date(h.record_date)}">
+</small>
+<h3 th:text="${display.label(h.record_type)}">
+</h3>
+<p th:text="${h.description}">
+</p>
+<small th:if="${h.vet_name != null}" th:text="'Bác sĩ: ' + ${h.vet_name}">
+</small>
+</article>
+</div>
+<p class="muted" th:if="${#lists.isEmpty(health)}">Chưa có bản ghi sức khỏe.</p>
+</div>
+</section>
+<section id="reviews" class="section">
+<div th:replace="~{fragments :: alerts}"></div>
+<div class="section-heading">
+<h2>Khách hàng chia sẻ</h2>
+<span class="badge" th:text="${product.reviewSummary.count} + ' đánh giá'">
+</span>
+</div>
+<div class="panel review-editor" th:if="${viewer == null}">
+<h3>Chia sẻ cảm nhận của bạn</h3>
+<p>Đăng nhập để viết đánh giá và bình luận về sản phẩm này.</p>
+<div class="review-editor-actions"><a class="button" th:href="@{/login}">Đăng nhập để đánh giá</a><a class="text-link" th:href="@{/register}">Tạo tài khoản</a></div>
+</div>
+<div class="panel review-editor" th:if="${viewer != null and viewer.role.toString() != 'customer' and myReview == null}">
+<h3>Đánh giá của khách hàng</h3>
+<p>Hãy dùng tài khoản khách hàng để viết đánh giá và bình luận về sản phẩm.</p>
+</div>
+<div class="panel review-editor" th:if="${canReview != null and canReview and myReviewId == null}">
+<h3>Viết đánh giá</h3>
+<p>Viết bình luận trước; bạn có thể chấm sao khi đăng.</p>
+<form class="review-new-form" th:action="@{/products/{id}/reviews(id=${product.id})}" method="post">
+<label class="review-comment">Bình luận<textarea name="comment" rows="3" maxlength="10000" placeholder="Sản phẩm này có gì bạn thích hoặc muốn góp ý?" required></textarea></label>
+<button class="button review-rating-open" type="button" data-review-dialog-open aria-haspopup="dialog" aria-controls="review-rating-dialog">Đăng đánh giá</button>
+<dialog class="review-rating-dialog" id="review-rating-dialog" aria-labelledby="review-rating-title">
+<div class="review-rating-dialog-heading">
+<div><span class="eyebrow">CẢM NHẬN CỦA BẠN</span><h3 id="review-rating-title">Chọn số sao</h3></div>
+<button class="review-rating-dialog-close" type="button" data-review-dialog-close aria-label="Đóng">×</button>
+</div>
+<p>Đánh giá mức độ hài lòng của bạn với sản phẩm.</p>
+<fieldset class="review-rating">
+<legend>Số sao</legend>
+<div class="review-rating-options">
+<label title="1 sao"><input type="radio" name="rating" value="1" aria-label="1 sao" required><span aria-hidden="true">☆</span></label>
+<label title="2 sao"><input type="radio" name="rating" value="2" aria-label="2 sao" required><span aria-hidden="true">☆</span></label>
+<label title="3 sao"><input type="radio" name="rating" value="3" aria-label="3 sao" required><span aria-hidden="true">☆</span></label>
+<label title="4 sao"><input type="radio" name="rating" value="4" aria-label="4 sao" required><span aria-hidden="true">☆</span></label>
+<label title="5 sao"><input type="radio" name="rating" value="5" aria-label="5 sao" required><span aria-hidden="true">☆</span></label>
+</div>
+</fieldset>
+<div class="review-form-footer"><small>Chọn từ 1 đến 5 sao.</small><button class="button" type="submit">Gửi đánh giá</button></div>
+</dialog>
+</form>
+</div>
+<div class="panel review-editor" th:if="${myReview != null}">
+<h3>Đánh giá của tôi</h3>
+<form id="review-edit-form" class="review-edit-form" th:action="@{/products/{id}/reviews/{review}/update(id=${product.id},review=${myReview.id})}" method="post">
+<fieldset class="review-rating">
+<legend>Số sao</legend>
+<div class="review-rating-options">
+<label title="1 sao"><input type="radio" name="rating" value="1" aria-label="1 sao" required disabled th:checked="${myReview.rating == 1}"><span aria-hidden="true">☆</span></label>
+<label title="2 sao"><input type="radio" name="rating" value="2" aria-label="2 sao" required disabled th:checked="${myReview.rating == 2}"><span aria-hidden="true">☆</span></label>
+<label title="3 sao"><input type="radio" name="rating" value="3" aria-label="3 sao" required disabled th:checked="${myReview.rating == 3}"><span aria-hidden="true">☆</span></label>
+<label title="4 sao"><input type="radio" name="rating" value="4" aria-label="4 sao" required disabled th:checked="${myReview.rating == 4}"><span aria-hidden="true">☆</span></label>
+<label title="5 sao"><input type="radio" name="rating" value="5" aria-label="5 sao" required disabled th:checked="${myReview.rating == 5}"><span aria-hidden="true">☆</span></label>
+</div>
+</fieldset>
+<label class="review-comment">Bình luận<textarea name="comment" rows="2" maxlength="10000" disabled readonly th:text="${myReview.comment}"></textarea></label>
+</form>
+<div class="review-edit-actions">
+<button class="button secondary" type="button" form="review-edit-form" data-review-edit-toggle>Chỉnh sửa</button>
+<button class="button secondary" type="submit" form="review-edit-form" data-review-edit-save hidden>Lưu</button>
+<form class="review-delete-form" th:action="@{/products/{id}/reviews/{review}/delete(id=${product.id},review=${myReview.id})}" method="post"><button class="button review-delete-button" type="submit">Xóa đánh giá</button></form>
+</div>
+</div>
+<form th:action="@{/products/{id}(id=${product.id})}" method="get" class="review-sort"><label>Sắp xếp đánh giá<select name="sort"><option value="newest" th:selected="${reviewSort == 'newest'}">Mới nhất</option><option value="rating_asc" th:selected="${reviewSort == 'rating_asc'}">Sao tăng dần</option><option value="rating_desc" th:selected="${reviewSort == 'rating_desc'}">Sao giảm dần</option></select></label><button class="button secondary" type="submit">Lọc</button></form>
+<div class="testimonials">
+<article th:each="r : ${reviews}" class="review-card">
+<div class="stars" th:text="${r.rating} + ' / 5 ★'">
+</div>
+<p th:text="${r.comment ?: 'Khách hàng đã đánh giá sản phẩm.'}">
+</p>
+<strong th:text="${r.author.display_name}">
+</strong>
+<small th:text="${display.date(r.created_at)}">
+</small>
+
+<form th:if="${viewer != null and viewer.role.toString() == 'admin' and (myReviewId == null or myReviewId != r.id)}" th:action="@{/products/{id}/reviews/{review}/delete(id=${product.id},review=${r.id})}" method="post"><button type="submit">Xóa đánh giá</button></form>
+</article>
+</div>
+<p class="empty-inline" th:if="${#lists.isEmpty(reviews)}">Chưa có đánh giá cho sản phẩm này. Hãy là người đầu tiên chia sẻ cảm nhận.</p>
+<nav th:replace="~{fragments :: pagination}">
+</nav>
+</section>
+</main>
+<footer th:replace="~{fragments :: footer}">
+</footer>
+</body>
+</html>

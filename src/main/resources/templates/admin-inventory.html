@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Chi tiết tồn kho')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+<main id="main" class="container page admin-page admin-detail-page">
+  <nav th:replace="~{fragments :: adminNav}"></nav><div th:replace="~{fragments :: alerts}"></div>
+  <a class="admin-back" th:href="@{/admin/inventory}">← Danh sách tồn kho</a>
+  <div class="admin-detail-heading"><div><p class="admin-kicker">QUẢN LÝ TỒN KHO</p><h1 th:text="${stock.name}"></h1><p class="admin-lead" th:text="'Sản phẩm #' + ${stock.product_id}"></p></div><span class="admin-pill" th:classappend="${stock.is_active ? ' state-active' : ' state-locked'}" th:text="${stock.is_active ? 'Đang bán' : 'Ngừng bán'}"></span></div>
+  <div class="admin-overview-grid admin-overview-three"><div class="admin-overview-item"><small>Tồn hiện tại</small><strong th:text="${stock.stock_quantity}"></strong></div><div class="admin-overview-item"><small>Loại sản phẩm</small><strong th:text="${display.label(stock.product_type)}"></strong></div><div class="admin-overview-item"><small>Số biến động</small><strong th:text="${movements.pagination.totalElements}"></strong></div></div>
+
+  <div class="admin-detail-layout">
+    <div class="admin-detail-main"><section class="admin-detail-card"><div class="admin-card-heading"><div><p class="admin-card-eyebrow">NHẬT KÝ KHO</p><h2>Lịch sử biến động</h2></div></div>
+      <p class="admin-help-text" th:if="${#lists.isEmpty(movements.data)}">Chưa có biến động tồn kho cho sản phẩm này.</p>
+      <div class="admin-table-wrap" th:unless="${#lists.isEmpty(movements.data)}"><table class="admin-table admin-movement-table"><thead><tr><th>Thời điểm</th><th>Thay đổi</th><th>Trước → Sau</th><th>Lý do / tham chiếu</th><th>Đơn hàng</th></tr></thead><tbody><tr th:each="m : ${movements.data}"><td th:text="${display.date(m.created_at)}"></td><td><strong class="admin-stock-change" th:classappend="${m.quantity_change > 0 ? ' positive' : ' negative'}" th:text="${m.quantity_change > 0 ? '+' + m.quantity_change : m.quantity_change}"></strong></td><td th:text="${m.quantity_before + ' → ' + m.quantity_after}"></td><td><strong th:text="${m.reason}"></strong><small th:if="${m.reference != null}" th:text="${m.reference}"></small></td><td><a th:if="${m.order_id != null}" th:href="@{/admin/orders/{id}(id=${m.order_id})}" th:text="'Đơn #' + ${m.order_id}"></a><span th:if="${m.order_id == null}">—</span></td></tr></tbody></table></div>
+      <nav class="admin-pagination" aria-label="Phân trang lịch sử"><a th:if="${movements.pagination.page > 0}" th:href="@{/admin/inventory/{id}(id=${stock.product_id},page=${movements.pagination.page - 1})}">← Trước</a><span th:text="${'Trang ' + (movements.pagination.page + 1)}"></span><a th:if="${movements.pagination.page + 1 < movements.pagination.totalPages}" th:href="@{/admin/inventory/{id}(id=${stock.product_id},page=${movements.pagination.page + 1})}">Sau →</a></nav>
+    </section></div>
+    <aside class="admin-detail-side"><section class="admin-detail-card admin-action-card" th:if="${stock.product_type != 'pet'}"><p class="admin-card-eyebrow">ĐIỀU CHỈNH TỒN</p><h2>Nhập hoặc giảm hàng</h2><p class="admin-help-text">Nhập số dương để tăng tồn, số âm để giảm. Mỗi lần lưu sẽ có một dòng nhật ký.</p><form th:action="@{/admin/inventory/{id}/adjust(id=${stock.product_id})}" method="post"><label>Thay đổi số lượng<input name="change" type="number" min="-1000000" max="1000000" required placeholder="Ví dụ: +5 hoặc -2"></label><label>Lý do<input name="reason" maxlength="255" required placeholder="Ví dụ: Nhập hàng mới"></label><label>Mã tham chiếu (nếu có)<input name="reference" maxlength="100" placeholder="Ví dụ: PN-001"></label><button class="button admin-full-button" type="submit">Lưu biến động</button></form></section>
+      <section class="admin-detail-card" th:if="${stock.product_type == 'pet'}"><p class="admin-card-eyebrow">TỒN KHO PET</p><h2>Cập nhật tự động</h2><p>Tồn của thú cưng thay đổi khi đặt hoặc hủy đơn. Không điều chỉnh trực tiếp tại đây.</p></section>
+    </aside>
+  </div>
+</main>
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

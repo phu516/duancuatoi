@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Đơn hàng #' + ${order.id})}">
+</head>
+<body>
+<header th:replace="~{fragments :: header}">
+</header>
+<main id="main" class="container page">
+<div class="breadcrumbs">
+<a th:href="@{/orders}">Đơn hàng của tôi</a>
+<span>›</span>
+<span th:text="'#' + ${order.id}">
+</span>
+</div>
+<div th:replace="~{fragments :: alerts}">
+</div>
+<div class="order-heading">
+<span class="order-check">✓</span>
+<span class="eyebrow">HÀNH TRÌNH ĐẾN VỚI BẠN NHỎ</span>
+<h1 th:text="'Đơn hàng #' + ${order.id}">
+</h1>
+<p th:text="'Đặt ngày ' + ${display.date(order.order_date)}">
+</p>
+<span class="badge green" th:text="${display.label(order.status)}">
+</span> <span class="badge" th:text="${display.label(order.payment_status)}">
+</span>
+</div>
+<div class="commerce-layout order-detail-layout">
+<div class="order-detail-primary">
+<section class="panel">
+<div class="section-heading">
+<h2>Sản phẩm trong đơn</h2>
+<span class="badge" th:text="${#lists.size(order.items)} + ' sản phẩm'">
+</span>
+</div>
+<div class="ordered-item" th:each="item : ${order.items}">
+<div>
+<h3 th:text="${item.product_name}">
+</h3>
+<small class="muted" th:text="${item.quantity} + ' × ' + ${display.money(item.unit_price)}">
+</small>
+</div>
+<strong th:text="${display.money(item.line_total)}">
+</strong>
+</div>
+<div class="order-totals">
+<div class="summary-row">
+<span>Tạm tính</span>
+<strong th:text="${display.money(order.subtotal)}">
+</strong>
+</div>
+<div class="summary-row">
+<span>Vận chuyển</span>
+<strong th:text="${display.money(order.shipping_fee)}">
+</strong>
+</div>
+<div class="summary-row">
+<span>Giảm giá <small th:if="${order.coupon_code != null}" th:text="'(' + ${order.coupon_code} + ')'">
+</small>
+</span>
+<strong class="green-text" th:text="${display.money(order.discount_amount)}">
+</strong>
+</div>
+<div class="summary-total">
+<span>Tổng thanh toán</span>
+<strong th:text="${display.money(order.total_amount)}">
+</strong>
+</div>
+</div>
+<p class="muted" th:text="${display.label(order.payment_method)}">
+</p>
+<p class="alert" th:if="${order.reserved_until != null}" th:text="'Hạn chờ thanh toán: ' + ${display.date(order.reserved_until)}">
+</p>
+</section>
+<section class="panel">
+<h2>Nhật ký đơn hàng</h2>
+<ol class="timeline">
+<li th:each="event : ${events}">
+<small th:text="${display.date(event.created_at)}">
+</small>
+<strong th:text="${display.label(event.new_value)}">
+</strong>
+<p th:if="${event.note != null}" th:text="${event.note}">
+</p>
+</li>
+</ol>
+<p th:if="${#lists.isEmpty(events)}" class="muted">Chưa có cập nhật.</p>
+</section>
+<section class="panel order-detail-cancel" th:if="${order.status == 'pending'}">
+<h2>Thay đổi kế hoạch?</h2>
+<p class="muted small">Bạn có thể hủy khi đơn còn chờ xác nhận.</p>
+<form th:action="@{/orders/{id}/cancel(id=${order.id})}" method="post">
+<label>Lý do hủy<textarea name="reason" maxlength="255" rows="2" required>
+</textarea>
+</label>
+<button type="submit" class="button secondary">Hủy đơn hàng</button>
+</form>
+</section>
+<section th:if="${order.cancellation != null}" class="panel">
+<h2>Thông tin hủy</h2>
+<p th:text="${order.cancellation.reason}">
+</p>
+<small class="muted" th:text="${display.date(order.cancellation.cancelled_at)}">
+</small>
+</section>
+</div>
+<aside class="order-detail-aside">
+<section class="panel">
+<span class="eyebrow">THÔNG TIN GIAO NHẬN</span>
+<h2 th:text="${order.shipping.recipient_name}">
+</h2>
+<p th:text="${order.shipping.recipient_phone}">
+</p>
+<p th:text="${display.label(order.shipping.delivery_method)}">
+</p>
+<p th:text="${order.shipping.address}">
+</p>
+<p th:if="${!#strings.isEmpty(order.shipping.note)}">
+<strong>Ghi chú: </strong>
+<span th:text="${order.shipping.note}">
+</span>
+</p>
+</section>
+<section class="panel" th:if="${order.status == 'pending' or order.status == 'confirmed'}">
+<h2>Sửa thông tin nhận hàng</h2>
+<form class="order-detail-shipping-form" th:action="@{/orders/{id}/shipping(id=${order.id})}" method="post">
+<label>Người nhận<input name="recipientName" th:value="${order.shipping.recipient_name}" required></label>
+<label>Số điện thoại<input name="recipientPhone" th:value="${order.shipping.recipient_phone}" required></label>
+<label>Địa chỉ<input name="address" th:value="${order.shipping.address}"></label>
+<label>Ghi chú<input name="note" th:value="${order.shipping.note}"></label>
+<button class="button secondary" type="submit">Lưu giao nhận</button>
+</form>
+</section>
+<a th:href="@{/products}" class="button full">Tiếp tục khám phá →</a>
+</aside>
+</div>
+</main>
+<footer th:replace="~{fragments :: footer}">
+</footer>
+</body>
+</html>

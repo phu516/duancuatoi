@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Đơn hàng của tôi')}">
+</head>
+<body>
+<header th:replace="~{fragments :: header}">
+</header>
+<main id="main" class="container page">
+<div class="page-heading">
+<span class="eyebrow">GÓC CỦA BẠN</span>
+<h1>Đơn hàng của tôi</h1>
+<p>Theo dõi từng món quà trên hành trình đến với bạn nhỏ.</p>
+</div>
+<div th:replace="~{fragments :: alerts}">
+</div>
+<form method="get" th:action="@{/orders}" class="order-filters">
+<label>Trạng thái<select name="status">
+<option value="">Tất cả đơn hàng</option>
+<option th:each="s : ${ {'pending','confirmed','shipping','completed','cancelled'} }" th:value="${s}" th:selected="${s == selectedStatus}" th:text="${display.label(s)}">
+</option>
+</select>
+</label>
+<label>Thanh toán<select name="paymentStatus"><option value="">Tất cả</option><option value="unpaid" th:selected="${selectedPaymentStatus == 'unpaid'}">Chưa trả</option><option value="paid" th:selected="${selectedPaymentStatus == 'paid'}">Đã trả</option><option value="refunded" th:selected="${selectedPaymentStatus == 'refunded'}">Đã hoàn</option></select></label>
+<label>Từ ngày<input type="date" name="dateFrom" th:value="${dateFrom}"></label><label>Đến ngày<input type="date" name="dateTo" th:value="${dateTo}"></label>
+<button type="submit" class="button secondary">Lọc đơn</button>
+</form>
+<div class="empty-state" th:if="${#lists.isEmpty(result.data)}">
+<span class="empty-icon">⌂</span>
+<h2>Chưa có đơn hàng phù hợp</h2>
+<p>Những đơn hàng của bạn sẽ xuất hiện ở đây.</p>
+<a class="button" th:href="@{/products}">Khám phá cửa hàng →</a>
+</div>
+<div class="order-list">
+<article class="order-list-card" th:each="o : ${result.data}">
+<div>
+<span class="eyebrow" th:text="${display.date(o.order_date)}">
+</span>
+<h2>
+<a th:href="@{/orders/{id}(id=${o.id})}" th:text="'Đơn hàng #' + ${o.id}">
+</a>
+</h2>
+</div>
+<div>
+<span class="badge" th:text="${display.label(o.status)}">
+</span>
+<p class="muted small" th:text="${display.label(o.payment_status)}">
+</p>
+</div>
+<strong class="price" th:text="${display.money(o.total_amount)}">
+</strong>
+<a class="button secondary" th:href="@{/orders/{id}(id=${o.id})}">Xem đơn →</a>
+</article>
+</div>
+<nav th:replace="~{fragments :: pagination}">
+</nav>
+</main>
+<footer th:replace="~{fragments :: footer}">
+</footer>
+</body>
+</html>

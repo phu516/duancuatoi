@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Thú cưng')}"></head>
+<body><header th:replace="~{fragments :: header}"></header>
+<main id="main" class="container page">
+<p><a th:href="@{/}">Trang chủ</a> › Thú cưng</p>
+<div class="page-heading"><h1>Tìm người bạn nhỏ</h1><p>Lọc theo tình trạng và giống. Mở hồ sơ để xem sức khỏe và thông tin chi tiết.</p></div>
+<div class="catalog-layout">
+<aside class="filter-panel"><form th:action="@{/pets}" method="get">
+<div class="section-heading"><h2>Bộ lọc</h2><a th:href="@{/pets}" class="text-link small">Đặt lại</a></div>
+<label>Tình trạng<select name="status"><option value="">Tất cả</option><option value="available" th:selected="${filters['status'] == 'available'}">Có thể nhận nuôi</option><option value="reserved" th:selected="${filters['status'] == 'reserved'}">Đang được giữ</option><option value="sold" th:selected="${filters['status'] == 'sold'}">Đã bán</option></select></label>
+<label>Giống<input name="breed" th:value="${filters['breed']}" maxlength="100"></label>
+<button class="button full" type="submit">Áp dụng bộ lọc</button>
+</form></aside>
+<section><div class="results-heading"><h2>Hồ sơ thú cưng</h2><span class="badge" th:text="${result.pagination.totalElements} + ' kết quả'"></span></div>
+<div class="product-grid catalog-grid"><article th:each="p : ${result.data}" class="product-card">
+<a class="product-photo" th:href="@{/products/{id}(id=${p.product_id})}"><img class="fallback-image" th:src="${display.image(p.product.image_url)}" th:alt="${p.product.name}" loading="lazy"><span class="badge" th:text="${display.label(p.status)}"></span></a>
+<div class="product-info"><p class="eyebrow" th:text="${p.breed ?: 'Chưa cập nhật giống'}"></p><h3><a th:href="@{/products/{id}(id=${p.product_id})}" th:text="${p.product.name}"></a></h3>
+<p th:text="${p.age ?: 'Tuổi đang cập nhật'}"></p><div class="card-bottom"><strong class="price" th:text="${display.money(p.product.price)}"></strong><a class="circle-link" th:href="@{/products/{id}(id=${p.product_id})}" th:aria-label="'Xem ' + ${p.product.name}"><img th:src="@{/images/paw-mark.svg}" alt="" width="24" height="24"></a></div></div></article></div>
+<div th:if="${#lists.isEmpty(result.data)}" class="empty-state"><h2>Chưa có thú cưng phù hợp</h2><a th:href="@{/pets}" class="button secondary">Xem tất cả</a></div>
+<nav th:replace="~{fragments :: pagination}"></nav></section></div>
+</main><footer th:replace="~{fragments :: footer}"></footer></body></html>

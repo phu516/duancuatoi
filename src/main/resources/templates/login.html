@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Đăng nhập')}">
+</head>
+<body class="auth-body">
+<a class="auth-home brand" th:href="@{/}">
+<img th:src="@{/images/paw.svg}" width="36" height="36" alt="">
+<span>PetVibe</span>
+</a>
+<main id="main" class="auth-layout">
+<section class="auth-story">
+<span class="eyebrow pill">PETVIBE CLUB</span>
+<h1>Chào bạn trở lại.<br>Niềm vui nhỏ<br>
+<em>đang chờ ở đây.</em>
+</h1>
+<p>Một nơi để chăm chút, yêu thương và tìm những điều tốt nhất cho người bạn bốn chân.</p>
+<img class="auth-photo fallback-image" th:src="@{/images/hero-pets.jpg}" alt="Cún và mèo bên nhau">
+<div class="auth-caption">Thêm một người bạn. Thêm nhiều yêu thương. ♡</div>
+</section>
+<section class="auth-form-panel">
+<span class="eyebrow">NGÔI NHÀ CHUNG CỦA SEN &amp; BOSS</span>
+<h2>Đăng nhập tài khoản</h2>
+<p class="muted">Quản lý giỏ hàng và theo dõi hành trình đơn hàng của bạn.</p>
+<div th:replace="~{fragments :: alerts}">
+</div>
+<form th:action="@{/login}" method="post" th:object="${form}">
+<label>Email<input th:field="*{email}" type="email" autocomplete="username" placeholder="ban@example.com" maxlength="100" required autofocus>
+<small class="field-error" th:errors="*{email}">
+</small>
+</label>
+<label>Mật khẩu<div class="password-field">
+<input id="password" name="password" type="password" autocomplete="current-password" required maxlength="1024">
+<button type="button" class="password-toggle" data-password="password" aria-label="Hiện mật khẩu">Hiện</button>
+</div>
+<small class="field-error" th:errors="*{password}">
+</small>
+</label>
+<button type="submit" class="button full">Đăng nhập ngay →</button>
+</form>
+<div class="auth-bottom">Chưa có tài khoản PetVibe? <a th:href="@{/register}" class="text-link">Đăng ký ngay</a>
+</div>
+<a th:href="@{/products}" class="muted small">← Tiếp tục khám phá cửa hàng</a>
+</section>
+</main>
+</body>
+</html>

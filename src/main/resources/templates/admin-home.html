@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Quản trị cửa hàng')}"></head>
+<body>
+<header th:replace="~{fragments :: header}"></header>
+<main id="main" class="container page admin-page">
+  <nav th:replace="~{fragments :: adminNav}"></nav>
+  <div th:replace="~{fragments :: alerts}"></div>
+  <div class="admin-page-heading admin-home-heading"><div><p class="admin-kicker">PETVIBE · QUẢN TRỊ</p><h1>Quản lý cửa hàng</h1><p class="admin-lead">Chọn công việc bạn cần xử lý. Mỗi khu vực có bộ lọc, danh sách và các thao tác phù hợp với quyền tài khoản.</p></div></div>
+  <div class="admin-home-grid">
+    <a class="admin-home-card" th:href="@{/admin/orders}"><span class="admin-home-icon" aria-hidden="true">▤</span><strong>Đơn hàng</strong><span>Xem mọi đơn, cập nhật tiến trình, thu hoặc hoàn tiền và sửa giao nhận.</span></a>
+    <a class="admin-home-card" th:href="@{/admin/inventory}"><span class="admin-home-icon" aria-hidden="true">▦</span><strong>Tồn kho</strong><span>Kiểm tra số lượng, ghi nhận nhập hàng và xem lịch sử biến động.</span></a>
+    <a class="admin-home-card" th:href="@{/admin/health}"><span class="admin-home-icon" aria-hidden="true">♡</span><strong>Hồ sơ sức khỏe</strong><span>Tra cứu các bản ghi khám và chăm sóc theo từng thú cưng.</span></a>
+    <th:block th:if="${isAdmin}">
+      <a class="admin-home-card" th:href="@{/admin/users}"><span class="admin-home-icon" aria-hidden="true">◎</span><strong>Người dùng</strong><span>Tìm tài khoản, thay đổi vai trò và khóa hoặc mở khóa.</span></a>
+      <a class="admin-home-card" th:href="@{/admin/products}"><span class="admin-home-icon" aria-hidden="true">◇</span><strong>Sản phẩm</strong><span>Quản lý mặt hàng, giá và trạng thái bán.</span></a>
+      <a class="admin-home-card" th:href="@{/admin/pets}"><span class="admin-home-icon" aria-hidden="true">♧</span><strong>Thú cưng</strong><span>Tạo hồ sơ pet, cập nhật thông tin và sức khỏe.</span></a>
+      <a class="admin-home-card" th:href="@{/admin/categories}"><span class="admin-home-icon" aria-hidden="true">◫</span><strong>Danh mục</strong><span>Sắp xếp các nhóm hàng hiển thị trong cửa hàng.</span></a>
+      <a class="admin-home-card" th:href="@{/admin/suppliers}"><span class="admin-home-icon" aria-hidden="true">↗</span><strong>Nhà cung cấp</strong><span>Lưu và cập nhật thông tin đối tác cung ứng.</span></a>
+    </th:block>
+  </div>
+</main>
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

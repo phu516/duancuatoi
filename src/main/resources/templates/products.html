@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Thú cưng & sản phẩm')}">
+</head>
+<body>
+<header th:replace="~{fragments :: header}">
+</header>
+<main id="main" class="container page">
+<div class="breadcrumbs">
+<a th:href="@{/}">Trang chủ</a>
+<span>›</span>
+<span>Cửa hàng</span>
+</div>
+<div class="page-heading">
+<span class="eyebrow">CÙNG BẠN NHỎ KHÁM PHÁ</span>
+<h1>Thú cưng &amp; sản phẩm</h1>
+<p>Một chút chăm sóc, thật nhiều yêu thương.</p>
+</div>
+<div class="catalog-layout">
+<aside class="filter-panel">
+<form th:action="@{/products}" method="get">
+<div class="section-heading">
+<h2>Bộ lọc tìm kiếm</h2>
+<a th:href="@{/products}" class="text-link small">Đặt lại</a>
+</div>
+<label>Từ khóa<input name="keyword" th:value="${filters['keyword']}" placeholder="Tên sản phẩm, giống thú..." maxlength="150">
+</label>
+<label>Danh mục<select name="category_id">
+<option value="">Tất cả danh mục</option>
+<option th:each="c : ${categories}" th:value="${c.id}" th:text="${c.name} + ' (' + ${c.product_count} + ')'" th:selected="${filters['category_id'] == #strings.toString(c.id)}">
+</option>
+</select>
+</label>
+<label>Loại sản phẩm<select name="product_type">
+<option value="">Tất cả sản phẩm</option>
+<option value="pet" th:selected="${filters['product_type'] == 'pet'}">Thú cưng</option>
+<option value="food" th:selected="${filters['product_type'] == 'food'}">Thức ăn</option>
+<option value="accessory" th:selected="${filters['product_type'] == 'accessory'}">Phụ kiện</option>
+</select>
+</label>
+<fieldset>
+<legend>Khoảng giá (₫)</legend>
+<div class="form-row">
+<label>Từ<input type="number" min="0" step="1000" name="min_price" th:value="${filters['min_price']}" placeholder="0">
+</label>
+<label>Đến<input type="number" min="0" step="1000" name="max_price" th:value="${filters['max_price']}" placeholder="Không giới hạn">
+</label>
+</div>
+</fieldset>
+<label>Sắp xếp<select name="sort">
+<option value="newest" th:selected="${filters['sort'] == null or filters['sort'] == 'newest'}">Mới nhất</option>
+<option value="price_asc" th:selected="${filters['sort'] == 'price_asc'}">Giá: thấp đến cao</option>
+<option value="price_desc" th:selected="${filters['sort'] == 'price_desc'}">Giá: cao đến thấp</option>
+</select>
+</label>
+<button class="button full" type="submit">Áp dụng bộ lọc</button>
+</form>
+<div class="filter-note">
+<span>♡</span>
+<h3>Chọn bạn nhỏ phù hợp</h3>
+<p>Xem thông tin chi tiết và hồ sơ sức khỏe để hiểu thêm về từng bé.</p>
+</div>
+</aside>
+<section>
+<div class="results-heading">
+<h2>Những lựa chọn dành cho bạn</h2>
+<span class="badge" th:text="${result.pagination.totalElements} + ' kết quả'">
+</span>
+</div>
+<div class="product-grid catalog-grid">
+<th:block th:each="p : ${result.data}">
+<article th:replace="~{fragments :: card(${p})}"></article>
+</th:block>
+</div>
+<div th:if="${#lists.isEmpty(result.data)}" class="empty-state">
+<span class="empty-icon">⌕</span>
+<h2>Chưa tìm thấy sản phẩm phù hợp</h2>
+<p>Thử một từ khóa khác hoặc bỏ bớt bộ lọc nhé.</p>
+<a th:href="@{/products}" class="button secondary">Xem tất cả sản phẩm</a>
+</div>
+<nav th:replace="~{fragments :: pagination}">
+</nav>
+</section>
+</div>
+</main>
+<footer th:replace="~{fragments :: footer}">
+</footer>
+</body>
+</html>
